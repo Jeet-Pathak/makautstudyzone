@@ -331,18 +331,17 @@
         }
         * {
             -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
         }
         html {
             scroll-behavior: smooth;
             -webkit-text-size-adjust: 100%;
             text-size-adjust: 100%;
-            height: auto;
+            height: 100%;
             min-height: 100%;
             overflow-x: hidden;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y pinch-zoom;
-            overscroll-behavior-y: auto;
         }
         body {
             min-height: 100%;
@@ -352,13 +351,12 @@
             overflow-x: hidden;
             overflow-y: visible;
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y pinch-zoom;
-            overscroll-behavior-y: auto;
-            padding-top: var(--sat);
-            padding-bottom: var(--sab);
-            padding-left: var(--sal);
-            padding-right: var(--sar);
             box-sizing: border-box;
+        }
+        html.scroll-locked,
+        body.scroll-locked {
+            overflow: hidden !important;
+            touch-action: none !important;
         }
         input, textarea, [contenteditable="true"], select {
             -webkit-user-select: text !important;
@@ -400,61 +398,10 @@
 
     <script type="module">
         // ═══════════════════════════════════════════════════════════════
-        // DEFINITIVE MOBILE SCROLL CONTROLLER
-        // Prevents body.overflow='hidden' from getting permanently stuck.
-        // Uses a reference counter: scroll is only locked when lockCount>0.
+        // DEFINITIVE MOBILE SCROLL & MODAL CONTROLLER
+        // Prevents background scroll freezing and ensures smooth touch navigation.
         // ═══════════════════════════════════════════════════════════════
         (() => {
-            let _lockCount = 0;
-            let _realOverflow = '';
-
-            const _applyScroll = () => {
-                const locked = _lockCount > 0;
-                // Apply to both html and body for maximum compatibility
-                document.documentElement.style.setProperty('overflow-y', locked ? 'hidden' : 'auto', 'important');
-                document.documentElement.style.setProperty('overflow-x', 'hidden', 'important');
-                document.body.style.setProperty('overflow-y', locked ? 'hidden' : 'visible', 'important');
-                document.body.style.setProperty('overflow-x', 'hidden', 'important');
-                // Always keep touch scrolling enabled on html/body
-                document.documentElement.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
-                document.documentElement.style.setProperty('touch-action', locked ? 'none' : 'pan-y pinch-zoom', 'important');
-                document.body.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
-                document.body.style.setProperty('touch-action', locked ? 'none' : 'pan-y pinch-zoom', 'important');
-            };
-
-            // Override document.body.style.overflow via a property trap
-            // so every assignment goes through our counter
-            let _intercepting = false;
-            const _patchBodyOverflow = () => {
-                try {
-                    const bodyStyle = document.body.style;
-                    Object.defineProperty(bodyStyle, 'overflow', {
-                        get() { return _realOverflow; },
-                        set(v) {
-                            if (_intercepting) return;
-                            _intercepting = true;
-                            const wasHidden = _realOverflow === 'hidden';
-                            const nowHidden = v === 'hidden';
-                            _realOverflow = v;
-                            if (nowHidden && !wasHidden) { _lockCount = Math.max(0, _lockCount) + 1; }
-                            else if (!nowHidden && wasHidden) { _lockCount = Math.max(0, _lockCount - 1); }
-                            _applyScroll();
-                            _intercepting = false;
-                        },
-                        configurable: true
-                    });
-                } catch(e) { /* fallback */ }
-            };
-
-            // Run patch after DOM is ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', _patchBodyOverflow);
-            } else {
-                _patchBodyOverflow();
-            }
-
-            // ── Safety net: auto-restore scroll every 2.5 s if stuck ──────
-            // If no modal/menu is visually open but lockCount > 0, reset.
             const _isSafeToUnlock = () => {
                 const activeModal = document.querySelector(
                     '.modal-overlay.active, .modal-ca3.active, ' +
@@ -463,36 +410,58 @@
                     '#mockTestOverlay:not([style*="display: none"]):not([style*="display:none"]), ' +
                     '#statusViewerOverlay:not([style*="display: none"]):not([style*="display:none"]), ' +
                     '#videoModal:not([style*="display: none"]):not([style*="display:none"]), ' +
+                    '#statusViewer:not([style*="display: none"]):not([style*="display:none"]), ' +
                     '.mob-menu.open, .staggered-menu-wrapper.is-open'
                 );
                 return !activeModal;
             };
 
-            setInterval(() => {
-                if (_lockCount > 0 && _isSafeToUnlock()) {
-                    _lockCount = 0;
-                    _realOverflow = '';
-                    _applyScroll();
-                }
-                // Always ensure html has correct scroll properties when no modal is open
+            const _syncScrollLock = () => {
                 if (_isSafeToUnlock()) {
-                    if (document.documentElement.style.overflowY === 'hidden') {
-                        document.documentElement.style.setProperty('overflow-y', 'auto', 'important');
-                    }
-                    if (document.body.style.overflowY === 'hidden') {
-                        document.body.style.setProperty('overflow-y', 'visible', 'important');
-                    }
-                    document.documentElement.style.setProperty('touch-action', 'pan-y pinch-zoom', 'important');
-                    document.body.style.setProperty('touch-action', 'pan-y pinch-zoom', 'important');
+                    document.documentElement.classList.remove('scroll-locked');
+                    document.body.classList.remove('scroll-locked');
+                    document.documentElement.style.overflowY = '';
+                    document.documentElement.style.overflowX = '';
+                    document.body.style.overflowY = '';
+                    document.body.style.overflowX = '';
+                } else {
+                    document.documentElement.classList.add('scroll-locked');
+                    document.body.classList.add('scroll-locked');
                 }
-            }, 2500);
+            };
 
-            // Expose for manual reset if needed
-            window.__unlockScroll = () => { _lockCount = 0; _realOverflow = ''; _applyScroll(); };
+            // Intercept document.body.style.overflow so legacy calls sync properly
+            try {
+                let _currentOverflow = '';
+                const bodyStyle = document.body.style;
+                Object.defineProperty(bodyStyle, 'overflow', {
+                    get() { return _currentOverflow; },
+                    set(v) {
+                        _currentOverflow = v;
+                        if (v === 'hidden') {
+                            document.documentElement.classList.add('scroll-locked');
+                            document.body.classList.add('scroll-locked');
+                        } else {
+                            _syncScrollLock();
+                        }
+                    },
+                    configurable: true
+                });
+            } catch(e) { }
 
-            // Apply immediately on page load
-            document.addEventListener('DOMContentLoaded', _applyScroll);
-            window.addEventListener('load', _applyScroll);
+            // Auto-recovery watchdog: check every 1.5s
+            setInterval(_syncScrollLock, 1500);
+
+            // Manual global unlock helper
+            window.__unlockScroll = () => {
+                document.documentElement.classList.remove('scroll-locked');
+                document.body.classList.remove('scroll-locked');
+                document.documentElement.style.overflowY = '';
+                document.body.style.overflowY = '';
+            };
+
+            document.addEventListener('DOMContentLoaded', _syncScrollLock);
+            window.addEventListener('load', _syncScrollLock);
         })();
 
         const db = window.supabase;
@@ -5301,18 +5270,10 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     });
 
 
-                    link.addEventListener('touchstart', (ev) => {
-                        openItem(el, 'top');
-                    }, { passive: true });
-
-
                     link.addEventListener('click', (ev) => {
                         ev.preventDefault();
-                        openItem(el, 'top');
-                        setTimeout(() => {
-                            if (window.nav) window.nav(itemData.target);
-                            if (window.closeMenu) window.closeMenu();
-                        }, 400);
+                        if (window.nav) window.nav(itemData.target);
+                        if (window.closeMenu) window.closeMenu();
                     });
                 });
             }
@@ -5328,7 +5289,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         };
 
         window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(window.initFlowingMenu, 500);
+            setTimeout(window.initFlowingMenu, 300);
         });
 
 
@@ -8403,17 +8364,14 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             background: rgba(8, 6, 14, 0.98);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
             transform: translateY(-100%);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s;
             pointer-events: none;
             visibility: hidden;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
         }
 
         .mob-menu.open {
@@ -8422,32 +8380,87 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             visibility: visible;
         }
 
-        .mob-menu a {
-            font-family: 'Unbounded', sans-serif;
-            font-size: clamp(1.2rem, 4.5vw, 2rem);
-            font-weight: 700;
-            color: rgba(255, 255, 255, 0.2);
-            text-decoration: none;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            padding: 10px 40px;
-            transition: color 0.3s, transform 0.3s;
-            opacity: 0;
-            transform: translateY(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            width: 280px;
-            text-align: center;
-            cursor: pointer;
-        }
-
-        .mob-menu.open a {
-            opacity: 1;
-            transform: translateY(0);
-            transition-delay: calc(0.04s * var(--i, 1));
-        }
-
-        .mob-menu a:hover {
-            color: var(--acid);
+        @media (max-width: 600px) {
+            .navbar {
+                height: 60px;
+                top: 32px;
+                padding: 0 12px;
+            }
+            .logo-wrap {
+                gap: 8px;
+            }
+            .logo-mark {
+                width: 32px;
+                height: 32px;
+            }
+            .logo-text {
+                font-size: 0.85rem;
+                letter-spacing: 1.5px;
+            }
+            .status-pill-label {
+                display: none;
+            }
+            .nav-pill {
+                padding: 6px 10px;
+                font-size: 0.5rem;
+            }
+            .page {
+                padding-top: 92px;
+            }
+            .hero {
+                min-height: calc(100svh - 92px);
+                padding: 24px 16px;
+            }
+            .hero-title {
+                font-size: clamp(2.2rem, 9vw, 3.8rem);
+                letter-spacing: -1px;
+            }
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+                gap: 12px;
+                margin-top: 32px;
+            }
+            .btn-acid,
+            .btn-premium {
+                width: 100%;
+                justify-content: center;
+                padding: 14px 20px;
+                font-size: 0.7rem;
+            }
+            .filter-card {
+                padding: 14px 12px;
+                border-radius: 12px;
+                margin-bottom: 16px;
+            }
+            .filter-row {
+                padding: 6px 0;
+                gap: 6px;
+            }
+            .filter-key {
+                width: 100%;
+                margin-bottom: 2px;
+            }
+            .tog-pill {
+                padding: 6px 10px;
+                font-size: 0.58rem;
+                min-height: 32px;
+            }
+            .modal-box,
+            .popup-box,
+            #mtPopupBox {
+                max-width: 95vw !important;
+                max-height: 92dvh !important;
+                border-radius: 12px !important;
+            }
+            .ap-table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                width: 100%;
+            }
+            .ap-table {
+                min-width: 480px;
+            }
         }
 
         .page {
@@ -17871,13 +17884,53 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         body.light-mode .subject-title {
             color: #111827;
         }
+
+        .pdf-modal-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 10001;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .pdf-modal-viewport {
+            position: relative;
+            width: 90%;
+            height: 85%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        @media (max-width: 640px) {
+            .pdf-modal-controls {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                justify-content: space-between;
+                gap: 6px;
+            }
+            .pdf-modal-controls button {
+                padding: 8px 12px !important;
+                font-size: 0.7rem !important;
+                border-radius: 8px !important;
+            }
+            .pdf-modal-viewport {
+                width: 100% !important;
+                height: calc(100% - 60px) !important;
+                margin-top: 55px !important;
+                border-radius: 0 !important;
+            }
+        }
     </style>
 
     <div id="pdfViewerModal"
-        style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+        style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; height:100dvh; background:rgba(0,0,0,0.95); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
 
-        <div
-            style="position:absolute; top:20px; right:20px; display:flex; gap:12px; z-index:10001; flex-wrap:wrap; justify-content:flex-end;">
+        <div class="pdf-modal-controls">
             <button id="pdfPrintBtn" onclick="window.printCurrentPdf()"
                 style="background:linear-gradient(135deg, var(--acid), #a0cc00); color:var(--ink); border:none; padding:10px 20px; border-radius:12px; cursor:pointer; font-weight:bold; font-family:'JetBrains Mono',monospace; box-shadow:0 4px 15px rgba(160,204,0,0.4); display:flex; align-items:center; gap:8px;"><i
                     class="fas fa-print"></i> Print</button>
@@ -17914,8 +17967,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
 
 
 
-        <div
-            style="position:relative; width:90%; height:85%; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <div class="pdf-modal-viewport">
             <iframe id="pdfViewerIframe" src="" sandbox="allow-scripts allow-same-origin allow-forms"
                 style="display:none; width:100%; height:100%; margin-top:0; border:none; pointer-events:auto;"
                 oncontextmenu="return false;"></iframe>
@@ -21689,280 +21741,8 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 }
             });
 
-            window.initFlowingMenu = () => {
-                const items = [
-                    { text: 'Home', target: 'home', img: 'https://picsum.photos/600/400?random=1' },
-                    { text: 'Courses', target: 'premium-courses', img: 'https://picsum.photos/600/400?random=10' },
-                    { text: 'Academic', target: 'academic', img: 'https://picsum.photos/600/400?random=2' },
-                    { text: 'PYQ', target: 'pyq', img: 'https://picsum.photos/600/400?random=3' },
-                    { text: 'Organizer', target: 'organizer', img: 'https://picsum.photos/600/400?random=4' },
-                    { text: 'Lectures', target: 'lectures', img: 'https://picsum.photos/600/400?random=5' },
-                    { text: 'Library', target: 'library', img: 'https://picsum.photos/600/400?random=6' },
-                    { text: 'Links', target: 'links', img: 'https://picsum.photos/600/400?random=7' },
-                    { text: 'CA Papers', target: 'ca3', img: 'https://picsum.photos/600/400?random=8' },
-                    { text: 'Doubt Zone', target: 'doubt', img: 'https://picsum.photos/600/400?random=9' },
-                    { text: 'WhatsApp', target: 'whatsapp', img: 'https://picsum.photos/600/400?random=10' },
-                    { text: 'Telegram', target: 'telegram', img: 'https://picsum.photos/600/400?random=11' },
-                    { text: 'Suggestions', target: 'suggestions', img: 'https://picsum.photos/600/400?random=12' },
-                    { text: 'GATE', target: 'gate', img: 'https://picsum.photos/600/400?random=13' },
-                    { text: 'Custom', target: 'custom', img: 'https://picsum.photos/600/400?random=14' },
-                    { text: 'Profile', target: 'profile', img: 'https://picsum.photos/600/400?random=15' }
-                ];
-                const container = document.getElementById('flowingMenuContainer');
-                if (!container) return;
-
-                container.innerHTML = items.map((item, i) => `
-        <div class="menu__item" data-idx="${i}">
-            <a class="menu__item-link">${item.text}</a>
-            <div class="marquee">
-                <div class="marquee__inner-wrap">
-                    <div class="marquee__inner" aria-hidden="true">
-                        ${Array(6).fill('').map(() => `
-                            <div class="marquee__part">
-                                <span>${item.text}</span>
-                                <div class="marquee__img" style="background-image: url(${item.img})"></div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-
-                // Setup GSAP
-                if (typeof gsap !== 'undefined') {
-                    let currentActiveEl = null;
-
-                    const closeItem = (el, edge = 'top') => {
-                        if (!el) return;
-                        const marquee = el.querySelector('.marquee');
-                        const marqueeInnerWrap = el.querySelector('.marquee__inner-wrap');
-                        const link = el.querySelector('.menu__item-link');
-                        gsap.timeline({ defaults: { duration: 0.4, ease: 'expo' } })
-                            .to(marquee, { y: edge === 'top' ? '-101%' : '101%' }, 0)
-                            .to(marqueeInnerWrap, { y: edge === 'top' ? '101%' : '-101%' }, 0)
-                            .set(link, { clearProps: 'color' }, 0.4);
-                    };
-
-                    const openItem = (el, edge = 'top') => {
-                        if (currentActiveEl === el) return;
-                        if (currentActiveEl) {
-                            closeItem(currentActiveEl, 'top');
-                        }
-                        currentActiveEl = el;
-
-                        const marquee = el.querySelector('.marquee');
-                        const marqueeInnerWrap = el.querySelector('.marquee__inner-wrap');
-                        const link = el.querySelector('.menu__item-link');
-
-                        gsap.timeline({ defaults: { duration: 0.4, ease: 'expo' } })
-                            .set(marquee, { y: edge === 'top' ? '-101%' : '101%' }, 0)
-                            .set(marqueeInnerWrap, { y: edge === 'top' ? '101%' : '-101%' }, 0)
-                            .to([marquee, marqueeInnerWrap], { y: '0%' }, 0)
-                            .set(link, { color: 'transparent' }, 0);
-                    };
-
-                    const distMetric = (x, y, x2, y2) => { const xDiff = x - x2; const yDiff = y - y2; return xDiff * xDiff + yDiff * yDiff; };
-                    const findClosestEdge = (mouseX, mouseY, width, height) => {
-                        return distMetric(mouseX, mouseY, width / 2, 0) < distMetric(mouseX, mouseY, width / 2, height) ? 'top' : 'bottom';
-                    };
-
-                    document.querySelectorAll('.menu__item').forEach(el => {
-                        const link = el.querySelector('.menu__item-link');
-                        const marqueeInner = el.querySelector('.marquee__inner');
-                        const marqueeContent = el.querySelector('.marquee__part');
-                        const itemData = items[parseInt(el.dataset.idx)];
-
-                        if (marqueeContent) {
-                            const w = marqueeContent.offsetWidth || 300;
-                            gsap.to(marqueeInner, { x: -w, duration: 15, ease: 'none', repeat: -1 });
-                        }
-
-                        link.addEventListener('mouseenter', (ev) => {
-                            let rect = el.getBoundingClientRect();
-                            let edge = findClosestEdge(ev.clientX - rect.left, ev.clientY - rect.top, rect.width, rect.height);
-                            openItem(el, edge);
-                        });
-
-                        link.addEventListener('mouseleave', (ev) => {
-                            let rect = el.getBoundingClientRect();
-                            let edge = findClosestEdge(ev.clientX - rect.left, ev.clientY - rect.top, rect.width, rect.height);
-                            if (currentActiveEl === el) {
-                                closeItem(el, edge);
-                                currentActiveEl = null;
-                            }
-                        });
-
-
-                        link.addEventListener('touchstart', (ev) => {
-                            openItem(el, 'top');
-                        }, { passive: true });
-
-
-                        link.addEventListener('click', (ev) => {
-                            ev.preventDefault();
-                            openItem(el, 'top');
-                            setTimeout(() => {
-                                if (window.nav) window.nav(itemData.target);
-                                if (window.closeMenu) window.closeMenu();
-                            }, 400);
-                        });
-                    });
-                }
-
-                const mobMenu = document.getElementById('mobMenu');
-                if (mobMenu) {
-                    mobMenu.addEventListener('click', (e) => {
-                        if (e.target === e.currentTarget || e.target.classList.contains('menu')) {
-                            window.closeMenu();
-                        }
-                    });
-                }
-            };
-
-            window.addEventListener('DOMContentLoaded', () => {
-                setTimeout(window.initFlowingMenu, 500);
-            });
-
         </script>
         <style>
-            .menu-wrap {
-                width: 100%;
-                height: 100%;
-                overflow-y: auto;
-                overflow-x: hidden;
-                padding-top: 100px;
-                padding-bottom: 40px;
-            }
-
-            .menu {
-                display: flex;
-                flex-direction: column;
-                min-height: 100%;
-                margin: 0;
-                padding: 0;
-            }
-
-            .menu__item {
-                flex: 1;
-                min-height: 8vh;
-                position: relative;
-                overflow: hidden;
-                text-align: center;
-                border-top: 1px solid rgba(255, 255, 255, 0.05);
-            }
-
-            .menu__item:first-child {
-                border-top: none;
-            }
-
-            .mob-menu .menu__item-link {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                height: 100%;
-                width: 100%;
-                padding: 0;
-                margin: 0;
-                position: relative;
-                cursor: pointer;
-                text-transform: uppercase;
-                text-decoration: none;
-                white-space: nowrap;
-                font-weight: 700;
-                font-size: 1.4rem;
-                font-family: 'Unbounded', sans-serif;
-                color: rgba(255, 255, 255, 0.5);
-                z-index: 2;
-                transition: color 0.3s;
-                border: none;
-                transform: none;
-                opacity: 1;
-            }
-
-            .mob-menu .menu__item-link:hover,
-            .mob-menu .menu__item.active .menu__item-link {
-                color: var(--acid);
-            }
-
-            .marquee {
-                position: absolute;
-                top: 0;
-                left: 0;
-                overflow: hidden;
-                width: 100%;
-                height: 100%;
-                pointer-events: none;
-                transform: translate3d(0, 101%, 0);
-                z-index: 1;
-                background: var(--acid);
-            }
-
-            .marquee__inner-wrap {
-                height: 100%;
-                width: 100%;
-                overflow: hidden;
-                transform: translate3d(0, -101%, 0);
-            }
-
-            .marquee__inner {
-                display: flex;
-                align-items: center;
-                position: relative;
-                height: 100%;
-                width: fit-content;
-                will-change: transform;
-            }
-
-            .marquee__part {
-                display: flex;
-                align-items: center;
-                flex-shrink: 0;
-            }
-
-            .marquee span {
-                white-space: nowrap;
-                text-transform: uppercase;
-                font-weight: 900;
-                font-size: 1.6rem;
-                font-family: 'Unbounded', sans-serif;
-                line-height: 1;
-                padding: 0 1vw;
-                color: var(--ink);
-            }
-
-            .marquee__img {
-                width: 80px;
-                height: 35px;
-                margin: 0 2vw;
-                border-radius: 50px;
-                background-size: cover;
-                background-position: 50% 50%;
-            }
-
-
-            .mob-menu {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 998;
-                background: rgba(8, 6, 14, 0.98);
-                backdrop-filter: blur(20px);
-                transform: translateY(-100%);
-                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-                will-change: transform;
-                display: block;
-                pointer-events: none;
-                visibility: hidden;
-            }
-
-            .mob-menu.open {
-                transform: translateY(0);
-                pointer-events: auto;
-                visibility: visible;
-            }
 
 
             .ca3-card {
