@@ -1,0 +1,8 @@
+﻿name = "makautstudyzone"
+pages_build_output_dir = "./dist"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Non-sensitive variables can be set here.
+# Secrets like SUPABASE_SERVICE_ROLE_KEY must be set in Cloudflare Pages dashboard or via wrangler secret.

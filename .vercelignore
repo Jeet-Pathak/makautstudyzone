@@ -1,0 +1,9 @@
+android
+apk
+scratch
+node_modules
+dist
+.vscode
+.gradle
+*.apk
+*.aab

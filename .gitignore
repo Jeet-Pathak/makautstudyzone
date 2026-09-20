@@ -1,0 +1,16 @@
+.vercel
+.env*
+.env.local
+node_modules
+dist
+.vscode
+.idea
+android/app/build
+android/.gradle
+.gradle
+apk/
+scratch/
+*.apk
+*.aab
+analysis_results.json
+
