@@ -13,4 +13,6 @@ scratch/
 *.apk
 *.aab
 analysis_results.json
+.wrangler
+
 
