@@ -1,0 +1,29 @@
+{
+  "routes": [
+    {
+      "routePath": "/api/admin/demote",
+      "mountPath": "/api/admin",
+      "method": "",
+      "module": [
+        "api/admin/demote.js:onRequest"
+      ]
+    },
+    {
+      "routePath": "/api/admin/promote",
+      "mountPath": "/api/admin",
+      "method": "",
+      "module": [
+        "api/admin/promote.js:onRequest"
+      ]
+    },
+    {
+      "routePath": "/api/pdf-proxy",
+      "mountPath": "/api",
+      "method": "",
+      "module": [
+        "api/pdf-proxy.js:onRequest"
+      ]
+    }
+  ],
+  "baseURL": "/"
+}

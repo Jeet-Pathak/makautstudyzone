@@ -332,7 +332,28 @@
         * {
             -webkit-tap-highlight-color: transparent;
         }
-        html, body {
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            height: auto;
+            min-height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            overscroll-behavior-y: auto;
+        }
+        body {
+            min-height: 100%;
+            min-height: 100dvh;
+            width: 100%;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            overscroll-behavior-y: auto;
             padding-top: var(--sat);
             padding-bottom: var(--sab);
             padding-left: var(--sal);
@@ -341,8 +362,6 @@
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
-            overscroll-behavior-y: none;
-            touch-action: manipulation;
         }
         input, textarea, [contenteditable="true"], select {
             -webkit-user-select: text !important;
@@ -7887,14 +7906,22 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             z-index: 998;
             background: rgba(8, 6, 14, 0.98);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             transform: translateY(-100%);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
             will-change: transform;
             display: block;
+            pointer-events: none;
+            visibility: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
 
         .mob-menu.open {
             transform: translateY(0);
+            pointer-events: auto;
+            visibility: visible;
         }
 
         *,
@@ -8008,7 +8035,13 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             color: var(--text);
             font-family: 'JetBrains Mono', monospace;
             overflow-x: hidden;
+            overflow-y: visible;
             min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
+            position: relative;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
             transition: background 0.8s, color 0.8s;
         }
 
@@ -13188,10 +13221,20 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
 
         @media (max-width: 1099px) {
 
-            html,
+            html {
+                overflow-x: hidden;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-y;
+            }
+
             body {
                 overflow-x: hidden;
-                max-width: 100vw;
+                overflow-y: visible;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-y;
+                width: 100%;
+                max-width: 100%;
             }
 
             .sec,
@@ -16553,14 +16596,24 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             contain: content;
         }
 
-        /* Touch optimization to remove 300ms mobile delay */
+        /* Touch optimization to remove 300ms mobile delay while preserving vertical pan/scroll */
         a,
         button,
         input[type="submit"],
         input[type="button"],
-        .menu__item,
-        .course-card {
+        .menu__item {
             touch-action: manipulation;
+        }
+
+        .course-card,
+        .ap-card,
+        .note-card,
+        .pyq-card,
+        .lec-card,
+        .link-card,
+        .gate-topic-card,
+        .sug-card {
+            touch-action: pan-y manipulation;
         }
 
         /* Override bad 'transition: all' that cause layout thrashing */
