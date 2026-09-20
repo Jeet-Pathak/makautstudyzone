@@ -420,6 +420,92 @@
             }
         })();
 
+        // ═══════════════════════════════════════════════════════════════
+        // DEFINITIVE MOBILE SCROLL FIX
+        // Prevents body.overflow='hidden' from getting permanently stuck.
+        // Uses a reference counter: scroll is only locked when lockCount>0.
+        // ═══════════════════════════════════════════════════════════════
+        (() => {
+            let _lockCount = 0;
+            let _realOverflow = '';
+
+            const _applyScroll = () => {
+                const locked = _lockCount > 0;
+                // Apply to both html and body for maximum compatibility
+                document.documentElement.style.setProperty('overflow-y', locked ? 'hidden' : 'auto', 'important');
+                document.documentElement.style.setProperty('overflow-x', 'hidden', 'important');
+                document.body.style.setProperty('overflow-y', locked ? 'hidden' : 'visible', 'important');
+                document.body.style.setProperty('overflow-x', 'hidden', 'important');
+                // Always keep touch scrolling enabled on html/body
+                document.documentElement.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
+                document.documentElement.style.setProperty('touch-action', locked ? 'none' : 'pan-y', 'important');
+                document.body.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
+                document.body.style.setProperty('touch-action', locked ? 'none' : 'pan-y', 'important');
+            };
+
+            // Override document.body.style.overflow via a property trap
+            // so every assignment goes through our counter
+            const _origBodyStyle = Object.getOwnPropertyDescriptor(CSSStyleDeclaration.prototype, 'overflow');
+            let _intercepting = false;
+            const _patchBodyOverflow = () => {
+                try {
+                    const bodyStyle = document.body.style;
+                    Object.defineProperty(bodyStyle, 'overflow', {
+                        get() { return _realOverflow; },
+                        set(v) {
+                            if (_intercepting) return;
+                            _intercepting = true;
+                            const wasHidden = _realOverflow === 'hidden';
+                            const nowHidden = v === 'hidden';
+                            _realOverflow = v;
+                            if (nowHidden && !wasHidden) { _lockCount = Math.max(0, _lockCount) + 1; }
+                            else if (!nowHidden && wasHidden) { _lockCount = Math.max(0, _lockCount - 1); }
+                            _applyScroll();
+                            _intercepting = false;
+                        },
+                        configurable: true
+                    });
+                } catch(e) { /* browser may not support – fallback to polling */ }
+            };
+
+            // Run patch after DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', _patchBodyOverflow);
+            } else {
+                _patchBodyOverflow();
+            }
+
+            // ── Safety net: auto-restore scroll every 3 s if stuck ──────
+            // If no modal/menu is visually open but lockCount > 0, reset.
+            const _isSafeToUnlock = () => {
+                const activeModal = document.querySelector(
+                    '.modal-overlay.active, #pdfOverlay[style*="flex"], ' +
+                    '#mockTestOverlay[style*="flex"], #statusViewerOverlay[style*="flex"], ' +
+                    '#videoModal[style*="flex"], .mob-menu.open, .staggered-menu-wrapper.is-open'
+                );
+                return !activeModal;
+            };
+            setInterval(() => {
+                if (_lockCount > 0 && _isSafeToUnlock()) {
+                    _lockCount = 0;
+                    _realOverflow = '';
+                    _applyScroll();
+                }
+                // Always ensure html has correct scroll properties
+                if (!document.querySelector('.mob-menu.open, .staggered-menu-wrapper.is-open')) {
+                    document.documentElement.style.setProperty('overflow-y', _lockCount > 0 ? 'hidden' : 'auto', 'important');
+                    document.documentElement.style.setProperty('touch-action', _lockCount > 0 ? 'none' : 'pan-y', 'important');
+                    document.body.style.setProperty('touch-action', _lockCount > 0 ? 'none' : 'pan-y', 'important');
+                }
+            }, 3000);
+
+            // Expose for manual reset if needed
+            window.__unlockScroll = () => { _lockCount = 0; _realOverflow = ''; _applyScroll(); };
+
+            // Apply immediately on page load
+            document.addEventListener('DOMContentLoaded', _applyScroll);
+        })();
+
         const db = window.supabase;
         // Firebase setLogLevel removed
 
@@ -21877,10 +21963,14 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                 will-change: transform;
                 display: block;
+                pointer-events: none;
+                visibility: hidden;
             }
 
             .mob-menu.open {
                 transform: translateY(0);
+                pointer-events: auto;
+                visibility: visible;
             }
 
 
