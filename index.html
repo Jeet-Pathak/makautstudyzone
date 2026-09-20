@@ -356,7 +356,9 @@
         html.scroll-locked,
         body.scroll-locked {
             overflow: hidden !important;
-            touch-action: none !important;
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
         }
         input, textarea, [contenteditable="true"], select {
             -webkit-user-select: text !important;
@@ -398,66 +400,100 @@
 
     <script type="module">
         // ═══════════════════════════════════════════════════════════════
-        // DEFINITIVE MOBILE SCROLL & MODAL CONTROLLER
-        // Prevents background scroll freezing and ensures smooth touch navigation.
+        // DEFINITIVE MOBILE SCROLL & MODAL CONTROLLER v3
+        // Uses position:fixed + scroll-position save/restore.
+        // Intercepts overflow & overflowY to keep in sync with legacy code.
         // ═══════════════════════════════════════════════════════════════
         (() => {
+            let _savedScrollY = 0;
+            let _isLocked = false;
+
             const _isSafeToUnlock = () => {
-                const activeModal = document.querySelector(
-                    '.modal-overlay.active, .modal-ca3.active, ' +
-                    '#pdfViewerModal:not([style*="display: none"]):not([style*="display:none"]), ' +
-                    '#notatureViewerModal:not([style*="display: none"]):not([style*="display:none"]), ' +
-                    '#mockTestOverlay:not([style*="display: none"]):not([style*="display:none"]), ' +
-                    '#statusViewerOverlay:not([style*="display: none"]):not([style*="display:none"]), ' +
-                    '#videoModal:not([style*="display: none"]):not([style*="display:none"]), ' +
-                    '#statusViewer:not([style*="display: none"]):not([style*="display:none"]), ' +
-                    '.mob-menu.open, .staggered-menu-wrapper.is-open'
-                );
-                return !activeModal;
+                try {
+                    const activeModal = document.querySelector(
+                        '.modal-overlay.active, .modal-ca3.active, ' +
+                        '#pdfViewerModal:not([style*="display: none"]):not([style*="display:none"]), ' +
+                        '#notatureViewerModal:not([style*="display: none"]):not([style*="display:none"]), ' +
+                        '#mockTestOverlay:not([style*="display: none"]):not([style*="display:none"]), ' +
+                        '#statusViewerOverlay:not([style*="display: none"]):not([style*="display:none"]), ' +
+                        '#videoModal.active, ' +
+                        '#statusViewer.active, ' +
+                        '#editModal.active, ' +
+                        '#courseAnnouncementModal:not([style*="display: none"]):not([style*="display:none"]), ' +
+                        '.mob-menu.open, .staggered-menu-wrapper.is-open'
+                    );
+                    return !activeModal;
+                } catch(e) { return true; }
+            };
+
+            const _lockScroll = () => {
+                if (_isLocked) return;
+                _savedScrollY = window.scrollY || window.pageYOffset || 0;
+                document.documentElement.classList.add('scroll-locked');
+                document.body.classList.add('scroll-locked');
+                document.body.style.top = `-${_savedScrollY}px`;
+                _isLocked = true;
+            };
+
+            const _unlockScroll = () => {
+                if (!_isLocked) return;
+                document.documentElement.classList.remove('scroll-locked');
+                document.body.classList.remove('scroll-locked');
+                document.body.style.top = '';
+                document.documentElement.style.overflowY = '';
+                document.documentElement.style.overflowX = '';
+                document.body.style.overflowY = '';
+                document.body.style.overflowX = '';
+                window.scrollTo(0, _savedScrollY);
+                _isLocked = false;
             };
 
             const _syncScrollLock = () => {
                 if (_isSafeToUnlock()) {
-                    document.documentElement.classList.remove('scroll-locked');
-                    document.body.classList.remove('scroll-locked');
-                    document.documentElement.style.overflowY = '';
-                    document.documentElement.style.overflowX = '';
-                    document.body.style.overflowY = '';
-                    document.body.style.overflowX = '';
+                    _unlockScroll();
                 } else {
-                    document.documentElement.classList.add('scroll-locked');
-                    document.body.classList.add('scroll-locked');
+                    _lockScroll();
                 }
             };
 
             // Intercept document.body.style.overflow so legacy calls sync properly
             try {
                 let _currentOverflow = '';
+                let _currentOverflowY = '';
                 const bodyStyle = document.body.style;
                 Object.defineProperty(bodyStyle, 'overflow', {
                     get() { return _currentOverflow; },
                     set(v) {
                         _currentOverflow = v;
                         if (v === 'hidden') {
-                            document.documentElement.classList.add('scroll-locked');
-                            document.body.classList.add('scroll-locked');
+                            _lockScroll();
                         } else {
-                            _syncScrollLock();
+                            // Delay sync to let the caller finish any DOM updates
+                            requestAnimationFrame(_syncScrollLock);
+                        }
+                    },
+                    configurable: true
+                });
+                Object.defineProperty(bodyStyle, 'overflowY', {
+                    get() { return _currentOverflowY; },
+                    set(v) {
+                        _currentOverflowY = v;
+                        // Only lock when explicitly set to hidden; ignore resets
+                        if (v === 'hidden') {
+                            _lockScroll();
                         }
                     },
                     configurable: true
                 });
             } catch(e) { }
 
-            // Auto-recovery watchdog: check every 1.5s
-            setInterval(_syncScrollLock, 1500);
+            // Auto-recovery watchdog: check every 800ms
+            setInterval(_syncScrollLock, 800);
 
             // Manual global unlock helper
             window.__unlockScroll = () => {
-                document.documentElement.classList.remove('scroll-locked');
-                document.body.classList.remove('scroll-locked');
-                document.documentElement.style.overflowY = '';
-                document.body.style.overflowY = '';
+                _isLocked = true; // Force the unlock path
+                _unlockScroll();
             };
 
             document.addEventListener('DOMContentLoaded', _syncScrollLock);
@@ -7933,32 +7969,6 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         }
 
 
-        .mob-menu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 998;
-            background: rgba(8, 6, 14, 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            transform: translateY(-100%);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
-            will-change: transform;
-            display: block;
-            pointer-events: none;
-            visibility: hidden;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-        }
-
-        .mob-menu.open {
-            transform: translateY(0);
-            pointer-events: auto;
-            visibility: visible;
-        }
 
         *,
         *::before,
@@ -13346,13 +13356,6 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 cursor: pointer !important;
                 touch-action: pan-y;
             }
-        }
-
-
-        .mob-menu {
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
         }
 
 
@@ -24317,7 +24320,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
 
                                 // Mobile Drawer Menu
                                 const mobMenu = document.getElementById('mobMenu');
-                                if (mobMenu && mobMenu.classList.contains('active')) {
+                                if (mobMenu && mobMenu.classList.contains('open')) {
                                     if (window.closeMenu) { window.closeMenu(); return; }
                                 }
 
