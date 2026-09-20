@@ -341,7 +341,7 @@
             overflow-x: hidden;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y;
+            touch-action: pan-y pinch-zoom;
             overscroll-behavior-y: auto;
         }
         body {
@@ -352,16 +352,13 @@
             overflow-x: hidden;
             overflow-y: visible;
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y;
+            touch-action: pan-y pinch-zoom;
             overscroll-behavior-y: auto;
             padding-top: var(--sat);
             padding-bottom: var(--sab);
             padding-left: var(--sal);
             padding-right: var(--sar);
             box-sizing: border-box;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
         input, textarea, [contenteditable="true"], select {
             -webkit-user-select: text !important;
@@ -402,26 +399,8 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <script type="module">
-        // Global Performance Optimization: Make all scroll/touch listeners passive by default
-        (() => {
-            let supportsPassive = false;
-            try { window.addEventListener('test', null, Object.defineProperty({}, 'passive', { get: () => supportsPassive = true })); } catch (e) { }
-            if (supportsPassive) {
-                const originalAddEventListener = EventTarget.prototype.addEventListener;
-                EventTarget.prototype.addEventListener = function (type, listener, options) {
-                    const passiveEvents = ['scroll', 'touchstart', 'touchmove', 'mousewheel', 'wheel'];
-                    if (passiveEvents.includes(type)) {
-                        if (typeof options === 'boolean') options = { capture: options, passive: true };
-                        else if (typeof options === 'object' && options !== null && options.passive === undefined) options.passive = true;
-                        else if (!options) options = { passive: true };
-                    }
-                    return originalAddEventListener.call(this, type, listener, options);
-                };
-            }
-        })();
-
         // ═══════════════════════════════════════════════════════════════
-        // DEFINITIVE MOBILE SCROLL FIX
+        // DEFINITIVE MOBILE SCROLL CONTROLLER
         // Prevents body.overflow='hidden' from getting permanently stuck.
         // Uses a reference counter: scroll is only locked when lockCount>0.
         // ═══════════════════════════════════════════════════════════════
@@ -438,14 +417,13 @@
                 document.body.style.setProperty('overflow-x', 'hidden', 'important');
                 // Always keep touch scrolling enabled on html/body
                 document.documentElement.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
-                document.documentElement.style.setProperty('touch-action', locked ? 'none' : 'pan-y', 'important');
+                document.documentElement.style.setProperty('touch-action', locked ? 'none' : 'pan-y pinch-zoom', 'important');
                 document.body.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
-                document.body.style.setProperty('touch-action', locked ? 'none' : 'pan-y', 'important');
+                document.body.style.setProperty('touch-action', locked ? 'none' : 'pan-y pinch-zoom', 'important');
             };
 
             // Override document.body.style.overflow via a property trap
             // so every assignment goes through our counter
-            const _origBodyStyle = Object.getOwnPropertyDescriptor(CSSStyleDeclaration.prototype, 'overflow');
             let _intercepting = false;
             const _patchBodyOverflow = () => {
                 try {
@@ -465,7 +443,7 @@
                         },
                         configurable: true
                     });
-                } catch(e) { /* browser may not support – fallback to polling */ }
+                } catch(e) { /* fallback */ }
             };
 
             // Run patch after DOM is ready
@@ -475,35 +453,46 @@
                 _patchBodyOverflow();
             }
 
-            // ── Safety net: auto-restore scroll every 3 s if stuck ──────
+            // ── Safety net: auto-restore scroll every 2.5 s if stuck ──────
             // If no modal/menu is visually open but lockCount > 0, reset.
             const _isSafeToUnlock = () => {
                 const activeModal = document.querySelector(
-                    '.modal-overlay.active, #pdfOverlay[style*="flex"], ' +
-                    '#mockTestOverlay[style*="flex"], #statusViewerOverlay[style*="flex"], ' +
-                    '#videoModal[style*="flex"], .mob-menu.open, .staggered-menu-wrapper.is-open'
+                    '.modal-overlay.active, .modal-ca3.active, ' +
+                    '#pdfViewerModal:not([style*="display: none"]):not([style*="display:none"]), ' +
+                    '#notatureViewerModal:not([style*="display: none"]):not([style*="display:none"]), ' +
+                    '#mockTestOverlay:not([style*="display: none"]):not([style*="display:none"]), ' +
+                    '#statusViewerOverlay:not([style*="display: none"]):not([style*="display:none"]), ' +
+                    '#videoModal:not([style*="display: none"]):not([style*="display:none"]), ' +
+                    '.mob-menu.open, .staggered-menu-wrapper.is-open'
                 );
                 return !activeModal;
             };
+
             setInterval(() => {
                 if (_lockCount > 0 && _isSafeToUnlock()) {
                     _lockCount = 0;
                     _realOverflow = '';
                     _applyScroll();
                 }
-                // Always ensure html has correct scroll properties
-                if (!document.querySelector('.mob-menu.open, .staggered-menu-wrapper.is-open')) {
-                    document.documentElement.style.setProperty('overflow-y', _lockCount > 0 ? 'hidden' : 'auto', 'important');
-                    document.documentElement.style.setProperty('touch-action', _lockCount > 0 ? 'none' : 'pan-y', 'important');
-                    document.body.style.setProperty('touch-action', _lockCount > 0 ? 'none' : 'pan-y', 'important');
+                // Always ensure html has correct scroll properties when no modal is open
+                if (_isSafeToUnlock()) {
+                    if (document.documentElement.style.overflowY === 'hidden') {
+                        document.documentElement.style.setProperty('overflow-y', 'auto', 'important');
+                    }
+                    if (document.body.style.overflowY === 'hidden') {
+                        document.body.style.setProperty('overflow-y', 'visible', 'important');
+                    }
+                    document.documentElement.style.setProperty('touch-action', 'pan-y pinch-zoom', 'important');
+                    document.body.style.setProperty('touch-action', 'pan-y pinch-zoom', 'important');
                 }
-            }, 3000);
+            }, 2500);
 
             // Expose for manual reset if needed
             window.__unlockScroll = () => { _lockCount = 0; _realOverflow = ''; _applyScroll(); };
 
             // Apply immediately on page load
             document.addEventListener('DOMContentLoaded', _applyScroll);
+            window.addEventListener('load', _applyScroll);
         })();
 
         const db = window.supabase;
@@ -8413,17 +8402,24 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             z-index: 998;
             background: rgba(8, 6, 14, 0.98);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 4px;
             transform: translateY(-100%);
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+            pointer-events: none;
+            visibility: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .mob-menu.open {
             transform: translateY(0);
+            pointer-events: auto;
+            visibility: visible;
         }
 
         .mob-menu a {
@@ -16661,17 +16657,12 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
     </style>
     <style id="performance-optimizations">
         /* Hardware acceleration for heavily animated or scrolled areas */
-        .modal-overlay,
         .modal-box,
-        .ap-modal,
         .ap-modal-box,
         .bottom-nav,
-        .sidebar,
-        .mob-menu,
         .course-card {
             will-change: transform, opacity;
-            transform: translateZ(0);
-            /* Force GPU */
+            /* Force GPU without breaking translation coordinates */
         }
 
         /* Containment to prevent massive repaints */
@@ -22342,6 +22333,13 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 z-index: 9999;
                 pointer-events: none;
                 overflow: hidden;
+            }
+
+            @media (max-width: 1099px) {
+                .staggered-menu-wrapper {
+                    display: none !important;
+                    pointer-events: none !important;
+                }
             }
 
             .staggered-menu-wrapper.is-open {
