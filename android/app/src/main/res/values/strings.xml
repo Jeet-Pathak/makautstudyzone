@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">MAKAUT Study Zone</string>
-    <string name="title_activity_main">MAKAUT Study Zone</string>
+    <string name="app_name">GEN-ZINEERS FOR MAKAUTIANS</string>
+    <string name="title_activity_main">GEN-ZINEERS FOR MAKAUTIANS</string>
     <string name="package_name">com.makautstudyzone.app</string>
     <string name="custom_url_scheme">com.makautstudyzone.app</string>
 </resources>

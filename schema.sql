@@ -698,6 +698,11 @@ CREATE POLICY ""Allow all on course_announcements"" ON course_announcements FOR 
 
 ALTER PUBLICATION supabase_realtime ADD TABLE course_announcements;
 
+ALTER TABLE course_announcements ADD COLUMN IF NOT EXISTS linkUrl VARCHAR(500);
+ALTER TABLE course_announcements ADD COLUMN IF NOT EXISTS courseId VARCHAR(255);
+ALTER TABLE course_announcements ADD COLUMN IF NOT EXISTS courseName VARCHAR(255);
+ALTER TABLE course_announcements ADD COLUMN IF NOT EXISTS updatedAt TIMESTAMPTZ;
+
 -- Added for Live Sessions
 CREATE TABLE IF NOT EXISTS live_sessions (
     id VARCHAR(255) PRIMARY KEY,

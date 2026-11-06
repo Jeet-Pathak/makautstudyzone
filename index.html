@@ -100,7 +100,7 @@
             return q;
         };
 
-        const camelKeys = ['createdAt', 'updatedAt', 'mockTestId', 'userId', 'semType', 'pdfLink', 'submittedAt', 'deviceId', 'dateRestricted', 'examYear', 'syllabusLink', 'notesLink', 'sectionSlug', 'musicURL', 'createdBy', 'subjectId', 'totalSessions', 'dailySessions', 'lastResetDate', 'passHash', 'adminOrder', 'isActive', 'isFinalNote', 'moduleId', 'lectureId', 'courseId', 'driveLink', 'statusId', 'expiresAt', 'likedAt', 'optionText', 'votedAt', 'lastViewedAt', 'musicUrl', 'videoDuration', 'telegramLink', 'displayOrder', 'ratingCount', 'subjectAdmins', 'assignedDonationId', 'oldPrice', 'newPrice', 'qrUrl', 'qrTitle', 'qrDesc', 'moduleName', 'videoType', 'videoId', 'ytLink', 'videoUrl', 'isPartition', 'imageUrl', 'startDate', 'endDate', 'passwordHash', 'usageCount', 'lastUsedAt', 'maxUses', 'maxUsers', 'updatedBy', 'grantedAt', 'pdfUrl', 'caType', 'collegeName', 'teacherName', 'yearSem', 'paperTitle', 'uploadedBy', 'uploaderId', 'uploadType'];
+        const camelKeys = ['createdAt', 'updatedAt', 'mockTestId', 'userId', 'semType', 'pdfLink', 'submittedAt', 'deviceId', 'dateRestricted', 'examYear', 'syllabusLink', 'notesLink', 'sectionSlug', 'musicURL', 'createdBy', 'subjectId', 'totalSessions', 'dailySessions', 'lastResetDate', 'passHash', 'adminOrder', 'isActive', 'isFinalNote', 'moduleId', 'lectureId', 'courseId', 'driveLink', 'statusId', 'expiresAt', 'likedAt', 'optionText', 'votedAt', 'lastViewedAt', 'musicUrl', 'videoDuration', 'telegramLink', 'displayOrder', 'ratingCount', 'subjectAdmins', 'assignedDonationId', 'oldPrice', 'newPrice', 'qrUrl', 'qrTitle', 'qrDesc', 'moduleName', 'videoType', 'videoId', 'ytLink', 'videoUrl', 'isPartition', 'imageUrl', 'startDate', 'endDate', 'passwordHash', 'usageCount', 'lastUsedAt', 'maxUses', 'maxUsers', 'updatedBy', 'grantedAt', 'pdfUrl', 'caType', 'collegeName', 'teacherName', 'yearSem', 'paperTitle', 'uploadedBy', 'uploaderId', 'uploadType', 'linkUrl', 'courseName'];
         const mapToSb = (d, colName) => {
             if (!d) return d;
             const res = {};
@@ -110,6 +110,9 @@
                     if (lower === 'createdat') lower = 'createdAt';
                     if (lower === 'updatedat') lower = 'updatedAt';
                     if (lower === 'assigneddonationid') lower = 'assignedDonationId';
+                }
+                if (colName === 'course_announcements') {
+                    if (lower === 'updatedat') return; // Column does not exist in table
                 }
                 res[lower] = d[k];
             });
@@ -321,7 +324,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-    <title>MSZ | MAKAUT Study Zone</title>
+    <title>GZS | GEN-ZINEERS FOR MAKAUTIANS</title>
     <style>
         :root {
             --sat: env(safe-area-inset-top, 0px);
@@ -375,14 +378,14 @@
         }
     </style>
     <link rel="manifest" href="manifest.json">
-    <meta property="og:title" content="MSZ | MAKAUT Study Zone" id="ogTitle">
-    <meta property="og:description" content="MAKAUT Study Zone - Premium Courses" id="ogDesc">
+    <meta property="og:title" content="GZS | GEN-ZINEERS FOR MAKAUTIANS" id="ogTitle">
+    <meta property="og:description" content="GEN-ZINEERS FOR MAKAUTIANS - Premium Courses" id="ogDesc">
     <meta property="og:image" content="" id="ogImage">
     <meta property="og:url" content="" id="ogUrl">
     <meta property="og:type" content="website" id="ogType">
     <meta name="twitter:card" content="summary_large_image" id="twCard">
-    <meta name="twitter:title" content="MSZ | MAKAUT Study Zone" id="twTitle">
-    <meta name="twitter:description" content="MAKAUT Study Zone - Premium Courses" id="twDesc">
+    <meta name="twitter:title" content="GZS | GEN-ZINEERS FOR MAKAUTIANS" id="twTitle">
+    <meta name="twitter:description" content="GEN-ZINEERS FOR MAKAUTIANS - Premium Courses" id="twDesc">
     <meta name="twitter:image" content="" id="twImage">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -901,11 +904,11 @@
             url.hash = `course/${course.id || course.slug}`;
             const fullUrl = url.href;
             document.getElementById('ogTitle')?.setAttribute('content', course.title);
-            document.getElementById('ogDesc')?.setAttribute('content', course.description || 'Premium Course by MSZ');
+            document.getElementById('ogDesc')?.setAttribute('content', course.description || 'Premium Course by GZS');
             document.getElementById('ogImage')?.setAttribute('content', course.thumbnail || '');
             document.getElementById('ogUrl')?.setAttribute('content', fullUrl);
             document.getElementById('twTitle')?.setAttribute('content', course.title);
-            document.getElementById('twDesc')?.setAttribute('content', course.description || 'Premium Course by MSZ');
+            document.getElementById('twDesc')?.setAttribute('content', course.description || 'Premium Course by GZS');
             document.getElementById('twImage')?.setAttribute('content', course.thumbnail || '');
         };
 
@@ -920,7 +923,7 @@
                     subjects = `\n📖 Includes:\n` + subs.map(s => `• ${s.title}`).join('\n') + `\n`;
                 }
             }
-            return `🚀 Check out this amazing course!\n\n📚 Course: ${course.title}\n${subjects}\n⭐ Rating: ${course.calculatedRating > 0 ? course.calculatedRating : 'No ratings yet'}\n🌐 Language: English & Bengali\n\nStart Learning Here:\n${fullUrl}\n\nPowered by MSZ (Makaut Study Zone)`;
+            return `🚀 Check out this amazing course!\n\n📚 Course: ${course.title}\n${subjects}\n⭐ Rating: ${course.calculatedRating > 0 ? course.calculatedRating : 'No ratings yet'}\n🌐 Language: English & Bengali\n\nStart Learning Here:\n${fullUrl}\n\nPowered by GZS (GEN-ZINEERS FOR MAKAUTIANS)`;
         };
 
         window.shareCourse = async (courseId, event) => {
@@ -3559,7 +3562,7 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
         window.shareStatusToWhatsApp = async (statusId) => {
             const status = window.STATUSES.find(s => s.id === statusId);
             if (!status) return;
-            let text = "Check out this update on MAKAUT Study Zone! 🚀\n";
+            let text = "Check out this update on GEN-ZINEERS! 🚀\n";
             if (status.text) text += `\n"${status.text}"\n`;
             text += `\nVisit: https://makautstudyzone.pages.dev/`;
 
@@ -3607,11 +3610,11 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
                     }
 
                     if (filesArray.length > 0) {
-                        await navigator.share({ title: 'MAKAUT Study Zone Status', text, files: filesArray });
+                        await navigator.share({ title: 'GEN-ZINEERS Status', text, files: filesArray });
                         return;
                     }
                 } else if (navigator.share) {
-                    await navigator.share({ title: 'MAKAUT Study Zone Status', text });
+                    await navigator.share({ title: 'GEN-ZINEERS Status', text });
                     return;
                 }
             } catch (err) {
@@ -4006,8 +4009,12 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
                 try {
                     window.sbOnSnapshot(window.sbCollection(db, 'course_announcements'), snap => {
                         window.COURSE_ANNOUNCEMENTS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                        if (window.currentSubjectId && window.updateAnnouncementBanner) {
-                            window.updateAnnouncementBanner(document.querySelector('.page.active')?.id.replace('page-', '') || '', window.currentSubjectId);
+                        const activePage = document.querySelector('.page.active')?.id.replace('page-', '') || '';
+                        if (window.updateAnnouncementBanner) {
+                            window.updateAnnouncementBanner(activePage, window.currentSubjectId);
+                        }
+                        if (document.getElementById('courseAnnouncementModal')?.classList.contains('active') && window.renderCamList) {
+                            window.renderCamList();
                         }
                     }, () => { });
                 } catch (e) { }
@@ -4819,6 +4826,11 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
             if (page === 'custom') renderCustomPage();
             if (page === 'ca3') renderCA3Papers();
             if (page === 'premium-courses') window.renderCourses();
+            if (page === 'home') {
+                if (window.initHeroStrokeText) window.initHeroStrokeText();
+            if (window.initHeroStarBorder) window.initHeroStarBorder();
+                if (window.initHeroStarBorder) window.initHeroStarBorder();
+            }
             if (page !== 'profile') window.checkAndShowMockTest();
         };
 
@@ -4898,7 +4910,7 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
 
             const u = window.CURRENT_USER;
             document.getElementById('profName').textContent = u.displayName || u.name;
-            const roleText = u.role === 'admin' ? 'MSZ Admin Account' : (u.role === 'subject_admin' ? 'MSZ Subject Admin' : 'MSZ Student Account');
+            const roleText = u.role === 'admin' ? 'GZS Admin Account' : (u.role === 'subject_admin' ? 'GZS Subject Admin' : 'GZS Student Account');
             const roleEl = document.getElementById('profRoleDisplay') || document.querySelector('.profile-role');
             if (roleEl) roleEl.textContent = roleText;
             const emailEl = document.getElementById('profEmail');
@@ -4949,6 +4961,729 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
                     }
                 }
             })();
+            window.initHeroStrokeText = () => {
+                const container = document.getElementById('heroStrokeText');
+                if (!container) return;
+
+                if (container.dataset.initialized === 'true' && container.querySelector('svg')) {
+                    if (window._heroStrokeTl) {
+                        window._heroStrokeTl.play(0);
+                    }
+                    if (window.gsap) {
+                        window.gsap.fromTo(['.hero-title .line2', '.hero-title .line3'],
+                            { opacity: 0, y: 20 },
+                            { opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'power2.out', delay: 0.2 }
+                        );
+                    }
+                    return;
+                }
+                container.dataset.initialized = 'true';
+
+                const text = "GEN-ZINEERS";
+                const strokeColor = "#A78BFA";
+                const fillColor = "#ffffff";
+                const strokeWidth = 1.4;
+                const drawDuration = 1.6;
+                const fillDelay = 0.2;
+                const stagger = 0.05;
+                const ease = "power2.out";
+                const fillMode = "wipe";
+                const wipeFrom = "left";
+                const fontSize = 110;
+                const fontWeight = 900;
+                const fontFamily = "'Unbounded', sans-serif";
+                const letterSpacing = -3;
+                const hoverRedraw = true;
+
+                const baseId = Math.random().toString(36).substring(2, 9);
+                const wipeId = `stroke-text-wipe-${baseId}`;
+                const dash = Math.max(fontSize * 7, 200);
+
+                function getWipeFrames(box, wFrom) {
+                    const end = { x: box.x, y: box.y, width: box.width, height: box.height };
+                    if (wFrom === 'right') return { start: { ...end, x: box.x + box.width, width: 0 }, end };
+                    if (wFrom === 'top') return { start: { ...end, height: 0 }, end };
+                    if (wFrom === 'bottom') return { start: { ...end, y: box.y + box.height, height: 0 }, end };
+                    return { start: { ...end, width: 0 }, end };
+                }
+
+                const fontStyleStr = `font-family: ${fontFamily}; font-size: ${fontSize}px; font-weight: ${fontWeight}; letter-spacing: ${letterSpacing}px;`;
+                const initViewBox = `0 ${-fontSize} 860 ${fontSize * 1.3}`;
+
+                const characters = Array.from(text);
+                const strokeChars = characters.map((c, i) => `<tspan data-stroke-char="true" key="s-${i}">${c === ' ' ? '&#160;' : c}</tspan>`).join('');
+                const fillChars = characters.map((c, i) => `<tspan data-fill-char="true" key="f-${i}">${c === ' ' ? '&#160;' : c}</tspan>`).join('');
+
+                container.innerHTML = `
+                    <span class="stroke-text stroke-text--hover" role="img" aria-label="${text}">
+                        <svg class="stroke-text__svg" viewBox="${initViewBox}" preserveAspectRatio="xMidYMid meet" aria-hidden="true" style="visibility: hidden;">
+                            <defs>
+                                <clipPath id="${wipeId}" clipPathUnits="userSpaceOnUse">
+                                    <rect id="wipeRect-${baseId}" x="0" y="0" width="0" height="0"></rect>
+                                </clipPath>
+                            </defs>
+                            <text id="strokeText-${baseId}" class="stroke-text__stroke" x="0" y="0" stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" style="${fontStyleStr}">
+                                ${strokeChars}
+                            </text>
+                            <g>
+                                <text class="stroke-text__fill" x="0" y="0" fill="${fillColor}" stroke="none" clip-path="url(#${wipeId})" style="${fontStyleStr}">
+                                    ${fillChars}
+                                </text>
+                            </g>
+                        </svg>
+                    </span>
+                `;
+
+                const root = container.querySelector('.stroke-text');
+                const svg = container.querySelector('.stroke-text__svg');
+                const strokeOutline = container.querySelector(`#strokeText-${baseId}`);
+                const wipeRect = container.querySelector(`#wipeRect-${baseId}`);
+
+                let currentBox = null;
+                let redraw = null;
+
+                function measure() {
+                    if (!strokeOutline) return;
+                    let bbox;
+                    try {
+                        bbox = strokeOutline.getBBox();
+                    } catch (e) {
+                        return;
+                    }
+                    if (!bbox || !bbox.width) return;
+
+                    const pad = Math.max(Number(strokeWidth) || 1, fontSize * 0.08);
+                    const next = {
+                        x: bbox.x - pad,
+                        y: bbox.y - pad,
+                        width: bbox.width + pad * 2,
+                        height: bbox.height + pad * 2
+                    };
+
+                    currentBox = next;
+                    svg.setAttribute('viewBox', `${next.x} ${next.y} ${next.width} ${next.height}`);
+                    svg.style.visibility = 'visible';
+                    root.style.setProperty('--stroke-text-width', `${next.width}px`);
+
+                    if (wipeRect) {
+                        const frames = getWipeFrames(next, wipeFrom);
+                        wipeRect.setAttribute('x', frames.start.x);
+                        wipeRect.setAttribute('y', frames.start.y);
+                        wipeRect.setAttribute('width', frames.start.width);
+                        wipeRect.setAttribute('height', frames.start.height);
+                    }
+                }
+
+                function setupAnimation() {
+                    const g = window.gsap;
+                    if (!g || !currentBox) return;
+
+                    const strokes = g.utils.toArray(root.querySelectorAll('[data-stroke-char]'));
+                    const fills = g.utils.toArray(root.querySelectorAll('[data-fill-char]'));
+                    const wipe = wipeRect;
+                    if (!strokes.length) return;
+
+                    const fillDuration = Math.max(0.4, drawDuration * 0.5);
+                    const frames = getWipeFrames(currentBox, wipeFrom);
+                    const targets = [...strokes, ...fills, wipe].filter(Boolean);
+
+                    const setStart = () => {
+                        g.killTweensOf(targets);
+                        g.set(strokes, { strokeDasharray: dash, strokeDashoffset: dash, strokeOpacity: 1 });
+                        g.set(fills, { opacity: 1 });
+                        if (wipe) g.set(wipe, { attr: frames.start });
+                    };
+
+                    const setEnd = () => {
+                        g.killTweensOf(targets);
+                        g.set(strokes, { strokeDasharray: dash, strokeDashoffset: 0, strokeOpacity: 1 });
+                        g.set(fills, { opacity: 1 });
+                        if (wipe) g.set(wipe, { attr: frames.end });
+                    };
+
+                    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+                    if (prefersReducedMotion) {
+                        setEnd();
+                        return;
+                    }
+
+                    const build = () => {
+                        setStart();
+                        const tl = g.timeline({
+                            paused: true,
+                            defaults: { overwrite: 'auto' }
+                        });
+
+                        tl.to(strokes, { strokeDashoffset: 0, duration: drawDuration, ease, stagger }, 0);
+                        if (wipe) {
+                            tl.to(wipe, { attr: frames.end, duration: fillDuration, ease: 'power2.inOut' }, drawDuration + fillDelay);
+                        }
+
+                        // Synchronize line2 (FOR) and line3 (MAKAUTIANS)
+                        tl.fromTo(['.hero-title .line2', '.hero-title .line3'],
+                            { opacity: 0, y: 25 },
+                            { opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'power2.out' },
+                            0.3
+                        );
+
+                        return tl;
+                    };
+
+                    window._heroStrokeTl = build();
+                    window._heroStrokeTl.play(0);
+
+                    if (hoverRedraw) {
+                        root.onpointerenter = () => {
+                            if (!window._heroStrokeTl || window._heroStrokeTl.progress() < 1 || redraw?.isActive()) return;
+                            redraw?.kill();
+                            redraw = g.timeline()
+                                .to(strokes, { strokeOpacity: 0, duration: 0.2, ease: 'power1.out' })
+                                .set(strokes, { strokeDashoffset: dash, strokeOpacity: 1 })
+                                .to(strokes, { strokeDashoffset: 0, duration: drawDuration * 0.8, ease, stagger });
+                        };
+                    }
+                }
+
+                measure();
+                if (document.fonts?.ready) {
+                    document.fonts.ready.then(() => {
+                        measure();
+                        setupAnimation();
+                    }).catch(() => {
+                        setupAnimation();
+                    });
+                } else {
+                    setupAnimation();
+                }
+
+                window.addEventListener('resize', () => {
+                    measure();
+                });
+
+                if (!window.gsap) {
+                    window.addEventListener('load', () => {
+                        measure();
+                        setupAnimation();
+                    }, { once: true });
+                }
+            };
+
+            window.initHeroStarBorder = () => {
+                const btn = document.getElementById('btnPremiumHero') || document.querySelector('.btn-premium');
+                if (!btn) return;
+                if (btn.dataset.starBorderInit === 'true') return;
+                btn.dataset.starBorderInit = 'true';
+
+                let canvas = btn.querySelector('.star-border__light');
+                if (!canvas) {
+                    canvas = document.createElement('canvas');
+                    canvas.className = 'star-border__light';
+                    canvas.setAttribute('aria-hidden', 'true');
+                    btn.insertBefore(canvas, btn.firstChild);
+                }
+
+                const THEMES = {
+                    dark: {
+                        surface: '#0c0c0f',
+                        text: '#fafafa',
+                        track: 'rgba(255, 255, 255, 0.1)',
+                        light: '#ffffff'
+                    },
+                    light: {
+                        surface: '#ffffff',
+                        text: '#18181b',
+                        track: 'rgba(24, 24, 27, 0.12)',
+                        light: '#18181b'
+                    }
+                };
+
+                const HOVERS = ['lap', 'brighten', 'reveal', 'none'];
+                const BLEED = 48;
+                const LAP = 0.9;
+                const TAU = Math.PI * 2;
+                const WHITE = [255, 255, 255];
+
+                const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+                const wrap = (value, total) => ((value % total) + total) % total;
+                const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - (2 - 2 * t) ** 3 / 2);
+                const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+                const rgba = (rgb, alpha) =>
+                    `rgba(${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(rgb[2])}, ${clamp(alpha, 0, 1).toFixed(3)})`;
+
+                let colorContext = null;
+                const toRgb = color => {
+                    colorContext = colorContext ?? document.createElement('canvas').getContext('2d');
+                    if (!colorContext) return WHITE;
+                    colorContext.fillStyle = '#000000';
+                    colorContext.fillStyle = color;
+                    const value = String(colorContext.fillStyle);
+                    if (value.startsWith('#')) {
+                        const hex = parseInt(value.slice(1, 7), 16);
+                        return [(hex >> 16) & 255, (hex >> 8) & 255, hex & 255];
+                    }
+                    const parts = value.match(/[\d.]+/g)?.map(Number) ?? WHITE;
+                    return [parts[0], parts[1], parts[2]];
+                };
+
+                const outline = (width, height, radius) => {
+                    const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+                    const arc = (Math.PI * r) / 2;
+                    const across = Math.max(0, width - 2 * r);
+                    const down = Math.max(0, height - 2 * r);
+                    const segments = [
+                        { length: across, x: r, y: 0, dx: 1, dy: 0, angle: null },
+                        { length: arc, x: width - r, y: r, dx: 0, dy: 0, angle: -Math.PI / 2 },
+                        { length: down, x: width, y: r, dx: 0, dy: 1, angle: null },
+                        { length: arc, x: width - r, y: height - r, dx: 0, dy: 0, angle: 0 },
+                        { length: across, x: width - r, y: height, dx: -1, dy: 0, angle: null },
+                        { length: arc, x: r, y: height - r, dx: 0, dy: 0, angle: Math.PI / 2 },
+                        { length: down, x: 0, y: height - r, dx: 0, dy: -1, angle: null },
+                        { length: arc, x: r, y: r, dx: 0, dy: 0, angle: Math.PI }
+                    ];
+                    return {
+                        r,
+                        segments,
+                        total: Math.max(
+                            1,
+                            segments.reduce((sum, segment) => sum + segment.length, 0)
+                        )
+                    };
+                };
+
+                const pointAt = (shape, distance, point) => {
+                    let s = wrap(distance, shape.total);
+                    for (const segment of shape.segments) {
+                        if (segment.length > 0 && s <= segment.length) {
+                            if (segment.angle === null) {
+                                point.x = segment.x + segment.dx * s;
+                                point.y = segment.y + segment.dy * s;
+                                point.nx = segment.dy;
+                                point.ny = -segment.dx;
+                            } else {
+                                const angle = segment.angle + s / shape.r;
+                                point.nx = Math.cos(angle);
+                                point.ny = Math.sin(angle);
+                                point.x = segment.x + point.nx * shape.r;
+                                point.y = segment.y + point.ny * shape.r;
+                            }
+                            return point;
+                        }
+                        s -= segment.length;
+                    }
+                    return point;
+                };
+
+                const project = (shape, px, py) => {
+                    let best = Infinity;
+                    let found = 0;
+                    let offset = 0;
+                    shape.segments.forEach(segment => {
+                        if (segment.length > 0) {
+                            let s = 0;
+                            let x = 0;
+                            let y = 0;
+                            if (segment.angle === null) {
+                                s = clamp((px - segment.x) * segment.dx + (py - segment.y) * segment.dy, 0, segment.length);
+                                x = segment.x + segment.dx * s;
+                                y = segment.y + segment.dy * s;
+                            } else {
+                                let angle = wrap(Math.atan2(py - segment.y, px - segment.x) - segment.angle, TAU);
+                                if (angle > Math.PI / 2) angle = angle > Math.PI * 1.25 ? 0 : Math.PI / 2;
+                                s = angle * shape.r;
+                                x = segment.x + Math.cos(segment.angle + angle) * shape.r;
+                                y = segment.y + Math.sin(segment.angle + angle) * shape.r;
+                            }
+                            const distance = (px - x) ** 2 + (py - y) ** 2;
+                            if (distance < best) {
+                                best = distance;
+                                found = offset + s;
+                            }
+                        }
+                        offset += segment.length;
+                    });
+                    return found;
+                };
+
+                const color = "#ffffff";
+                const trailColor = "#ffffff";
+                const duration = 4;
+                const direction = "clockwise";
+                const stars = 1;
+                const trailLength = 0.3;
+                const thickness = 1.2;
+                const radius = 20;
+                const glow = 0.6;
+                const hover = "lap";
+                const sparkle = false;
+                const clickPulse = true;
+                const theme = "dark";
+
+                const palette = THEMES[theme] ?? THEMES.dark;
+                const light = color ?? palette.light;
+
+                const s = {
+                    light: theme === 'light',
+                    color: light,
+                    trailColor: trailColor ?? light,
+                    duration: Math.max(0.3, duration),
+                    thickness: Math.max(0.5, thickness),
+                    radius: Math.max(0, radius),
+                    trailLength: clamp(trailLength, 0, 1),
+                    stars: clamp(Math.round(stars), 1, 6),
+                    glow: clamp(glow, 0, 1),
+                    sparkle,
+                    direction: direction === 'counterclockwise' ? -1 : 1,
+                    hover: HOVERS.includes(hover) ? hover : 'lap',
+                    clickPulse
+                };
+
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+                const point = { x: 0, y: 0, nx: 0, ny: -1 };
+                const state = {
+                    width: 0,
+                    height: 0,
+                    dpr: 1,
+                    phase: 0,
+                    velocity: 0,
+                    motion: 0,
+                    lap: -1,
+                    time: 0,
+                    reveal: 1,
+                    boost: 0,
+                    flash: 0,
+                    emit: 0,
+                    hovered: false,
+                    focused: false,
+                    pointerX: 0,
+                    pointerY: 0,
+                    visible: true
+                };
+                const pulses = [];
+                const dust = [];
+                const colors = { key: '', head: WHITE, tail: WHITE };
+                let raf = 0;
+                let last = performance.now();
+                let alive = true;
+
+                const measure = () => {
+                    state.width = btn.offsetWidth;
+                    state.height = btn.offsetHeight;
+                    state.dpr = Math.min(window.devicePixelRatio || 1, 2);
+                    canvas.width = Math.max(1, Math.round((state.width + BLEED * 2) * state.dpr));
+                    canvas.height = Math.max(1, Math.round((state.height + BLEED * 2) * state.dpr));
+                    wake();
+                };
+
+                const local = event => {
+                    const rect = btn.getBoundingClientRect();
+                    const scaleX = rect.width ? state.width / rect.width : 1;
+                    const scaleY = rect.height ? state.height / rect.height : 1;
+                    return [(event.clientX - rect.left) * scaleX, (event.clientY - rect.top) * scaleY];
+                };
+
+                const shapeFor = config =>
+                    outline(
+                        Math.max(1, state.width - config.thickness),
+                        Math.max(1, state.height - config.thickness),
+                        config.radius - config.thickness / 2
+                    );
+
+                const stroke = (x1, y1, x2, y2, width, strokeStyle) => {
+                    ctx.lineWidth = width;
+                    ctx.strokeStyle = strokeStyle;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                };
+
+                const drawTrail = (config, shape, head, length, sign, intensity, tip = true) => {
+                    if (length < 0.5 || intensity <= 0) return;
+                    const steps = clamp(Math.ceil(length / 2), 2, 90);
+                    pointAt(shape, head, point);
+                    let px = point.x;
+                    let py = point.y;
+                    for (let i = 1; i <= steps; i++) {
+                        pointAt(shape, head - sign * length * (i / steps), point);
+                        const u = 1 - (i - 0.5) / steps;
+                        const fade = u * u * intensity;
+                        let tone = mix(colors.tail, colors.head, u);
+                        if (!config.light) tone = mix(tone, WHITE, u ** 6 * 0.65);
+                        ctx.lineCap = tip && i === 1 ? 'round' : 'butt';
+                        stroke(px, py, point.x, point.y, 2 + 6 * config.glow, rgba(tone, fade * (config.light ? 0.1 : 0.2) * config.glow));
+                        stroke(px, py, point.x, point.y, config.thickness, rgba(tone, fade));
+                        px = point.x;
+                        py = point.y;
+                    }
+                };
+
+                const drawHead = (config, x, y, intensity, twinkle) => {
+                    if (intensity <= 0) return;
+                    const tone = colors.head;
+                    const reach = (12 + 40 * config.glow) * (config.light ? 0.6 : 1);
+                    const bloom = ctx.createRadialGradient(x, y, 0, x, y, reach);
+                    const strength = (config.light ? 0.08 : 0.4) * config.glow * intensity;
+                    bloom.addColorStop(0, rgba(tone, strength));
+                    bloom.addColorStop(0.2, rgba(tone, strength * 0.4));
+                    bloom.addColorStop(0.5, rgba(tone, strength * 0.1));
+                    bloom.addColorStop(1, rgba(tone, 0));
+                    ctx.fillStyle = bloom;
+                    ctx.fillRect(x - reach, y - reach, reach * 2, reach * 2);
+                    if (!config.sparkle) return;
+
+                    const size = (1 + config.thickness * 0.6) * (config.light ? 0.85 : 1);
+                    const core = ctx.createRadialGradient(x, y, 0, x, y, size * 2.2);
+                    core.addColorStop(0, rgba(config.light ? tone : WHITE, intensity));
+                    core.addColorStop(config.light ? 0.3 : 0.4, rgba(config.light ? tone : mix(tone, WHITE, 0.5), intensity * 0.9));
+                    core.addColorStop(config.light ? 0.55 : 1, rgba(tone, config.light ? intensity * 0.12 : 0));
+                    core.addColorStop(1, rgba(tone, 0));
+                    ctx.fillStyle = core;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size * 2.2, 0, TAU);
+                    ctx.fill();
+
+                    const spike = (3 + 4 * config.glow + config.thickness * 1.5) * twinkle;
+                    const center = config.light ? tone : WHITE;
+                    const horizontal = ctx.createLinearGradient(x - spike, y, x + spike, y);
+                    horizontal.addColorStop(0, rgba(tone, 0));
+                    horizontal.addColorStop(0.5, rgba(center, intensity * 0.95));
+                    horizontal.addColorStop(1, rgba(tone, 0));
+                    stroke(x - spike, y, x + spike, y, config.light ? 0.75 : 1, horizontal);
+                    const vertical = ctx.createLinearGradient(x, y - spike, x, y + spike);
+                    vertical.addColorStop(0, rgba(tone, 0));
+                    vertical.addColorStop(0.5, rgba(center, intensity * 0.95));
+                    vertical.addColorStop(1, rgba(tone, 0));
+                    stroke(x, y - spike, x, y + spike, config.light ? 0.75 : 1, vertical);
+                };
+
+                const spawnDust = (x, y, nx, ny, speed) => {
+                    if (dust.length > 48) return;
+                    const push = 3 + Math.random() * 10;
+                    const drift = (Math.random() - 0.5) * 8;
+                    dust.push({
+                        x: x + nx * (Math.random() * 3 - 1),
+                        y: y + ny * (Math.random() * 3 - 1),
+                        vx: nx * push - ny * drift - speed * -ny * 0.04,
+                        vy: ny * push + nx * drift - speed * nx * 0.04,
+                        age: 0,
+                        life: 0.35 + Math.random() * 0.5,
+                        size: 0.45 + Math.random() * 0.7,
+                        seed: Math.random() * TAU
+                    });
+                };
+
+                const draw = (base, shape) => {
+                    const config = state.boost > 0.001 ? { ...base, glow: Math.min(1.5, base.glow + 0.4 * state.boost) } : base;
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    if (state.width < 2 || state.height < 2) return;
+                    const offset = (BLEED + config.thickness / 2) * state.dpr;
+                    ctx.setTransform(state.dpr, 0, 0, state.dpr, offset, offset);
+                    ctx.globalCompositeOperation = config.light ? 'source-over' : 'lighter';
+                    ctx.lineCap = 'butt';
+
+                    const total = shape.total;
+                    const spacing = total / config.stars;
+                    const speed = Math.abs(state.motion);
+                    const sign = state.motion >= 0 ? 1 : -1;
+                    const span = config.trailLength * config.duration;
+                    const length = Math.min(speed * span, spacing * 0.92, total * 0.6);
+                    const intensity = state.reveal * (1 + 0.4 * state.boost + 0.6 * state.flash);
+
+                    const ring = state.flash * (config.light ? 0.18 : 0.32) + state.boost * state.reveal * (config.light ? 0.07 : 0.12);
+                    if (ring > 0.005) {
+                        ctx.lineWidth = config.thickness + 2 * config.glow;
+                        ctx.strokeStyle = rgba(colors.head, ring);
+                        ctx.beginPath();
+                        ctx.roundRect(
+                            0,
+                            0,
+                            Math.max(1, state.width - config.thickness),
+                            Math.max(1, state.height - config.thickness),
+                            Math.max(0, shape.r)
+                        );
+                        ctx.stroke();
+                    }
+
+                    const still = clamp(1 - speed / Math.max(1, (total / config.duration) * 0.6), 0, 1) * Math.min(1, intensity);
+                    const rest = (10 + 14 * config.glow + config.thickness * 2) * still;
+                    for (let i = 0; i < config.stars; i++) {
+                        const head = state.phase + i * spacing;
+                        drawTrail(config, shape, head, length, sign, Math.min(1, intensity));
+                        if (still > 0.01) {
+                            drawTrail(config, shape, head, rest, 1, still, false);
+                            drawTrail(config, shape, head, rest, -1, still, false);
+                        }
+                    }
+
+                    pulses.forEach(pulse => {
+                        const progress = pulse.age / 0.65;
+                        const fade = (1 - progress) ** 2;
+                        const travel = (total / 2) * (1 - (1 - Math.min(1, pulse.age / 0.5)) ** 2);
+                        const tail = Math.min(travel, total * 0.16);
+                        [1, -1].forEach(way => {
+                            const front = pulse.origin + way * travel;
+                            drawTrail(config, shape, front, tail, way, fade);
+                            pointAt(shape, front, point);
+                            drawHead(config, point.x, point.y, fade * 0.8, 0.8);
+                        });
+                    });
+
+                    for (let i = 0; i < config.stars; i++) {
+                        pointAt(shape, state.phase + i * spacing, point);
+                        const twinkle = 0.82 + 0.18 * Math.sin(state.time * 6.1 + i * 2.3) * Math.sin(state.time * 2.7 + i);
+                        drawHead(config, point.x, point.y, Math.min(1.3, intensity), twinkle);
+                    }
+
+                    dust.forEach(mote => {
+                        const left = 1 - mote.age / mote.life;
+                        const shimmer = 0.45 + 0.55 * Math.sin(state.time * 20 + mote.seed);
+                        const alpha = left * shimmer * state.reveal * (config.light ? 0.35 : 0.9);
+                        if (alpha <= 0.01) return;
+                        ctx.fillStyle = rgba(config.light ? colors.head : mix(colors.tail, WHITE, 0.6), alpha);
+                        ctx.beginPath();
+                        ctx.arc(mote.x, mote.y, mote.size * (0.6 + 0.4 * left), 0, TAU);
+                        ctx.fill();
+                    });
+                };
+
+                const frame = now => {
+                    raf = 0;
+                    if (!alive) return;
+                    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+                    last = now;
+                    state.time += dt;
+
+                    const key = `${s.color}|${s.trailColor}`;
+                    if (key !== colors.key) {
+                        colors.key = key;
+                        colors.head = toRgb(s.color);
+                        colors.tail = toRgb(s.trailColor);
+                    }
+
+                    const shape = shapeFor(s);
+                    const total = shape.total;
+                    const spacing = total / s.stars;
+                    const engaged = state.hovered || state.focused;
+                    const cruise = reduce ? 0 : (s.direction * total) / s.duration;
+
+                    const revealTarget = s.hover === 'reveal' && !engaged ? 0 : 1;
+                    state.reveal += (revealTarget - state.reveal) * (1 - Math.exp(-dt / (revealTarget > state.reveal ? 0.16 : 0.45)));
+                    const boostTarget = s.hover === 'brighten' && engaged ? 1 : 0;
+                    state.boost += (boostTarget - state.boost) * (1 - Math.exp(-dt / (boostTarget > state.boost ? 0.18 : 0.5)));
+                    state.flash *= Math.exp(-dt / 0.22);
+
+                    state.velocity += (cruise - state.velocity) * (1 - Math.exp(-dt / 0.45));
+                    let extra = 0;
+                    if (state.lap >= 0) {
+                        const before = ease(Math.min(1, state.lap / LAP));
+                        state.lap += dt;
+                        extra = (ease(Math.min(1, state.lap / LAP)) - before) * total * s.direction;
+                        if (state.lap >= LAP) state.lap = -1;
+                    }
+                    state.motion = state.velocity + extra / dt;
+                    state.phase = wrap(state.phase + state.velocity * dt + extra, total);
+
+                    const pace = Math.abs(state.motion) / Math.max(1, Math.abs(total / s.duration));
+                    if (s.sparkle && !reduce && state.reveal > 0.05) {
+                        state.emit += dt * (2 + 6 * Math.min(2, pace)) * s.stars;
+                        while (state.emit > 1) {
+                            state.emit -= 1;
+                            pointAt(shape, state.phase + Math.floor(Math.random() * s.stars) * spacing, point);
+                            spawnDust(point.x, point.y, point.nx, point.ny, state.motion);
+                        }
+                    }
+                    for (let i = dust.length - 1; i >= 0; i--) {
+                        const mote = dust[i];
+                        mote.age += dt;
+                        mote.x += mote.vx * dt;
+                        mote.y += mote.vy * dt;
+                        mote.vx *= Math.exp(-dt * 2.2);
+                        mote.vy *= Math.exp(-dt * 2.2);
+                        if (mote.age >= mote.life) dust.splice(i, 1);
+                    }
+                    for (let i = pulses.length - 1; i >= 0; i--) {
+                        pulses[i].age += dt;
+                        if (pulses[i].age >= 0.65) pulses.splice(i, 1);
+                    }
+
+                    draw(s, shape);
+
+                    const settling =
+                        Math.abs(revealTarget - state.reveal) > 0.002 ||
+                        Math.abs(boostTarget - state.boost) > 0.002 ||
+                        state.flash > 0.01 ||
+                        pulses.length > 0 ||
+                        dust.length > 0;
+                    const moving = Math.abs(state.motion) > 0.05 || cruise !== 0 || state.lap >= 0;
+                    const showing = state.reveal > 0.002 || revealTarget > 0;
+                    if (state.visible && (settling || (moving && showing) || state.hovered)) raf = requestAnimationFrame(frame);
+                };
+
+                const wake = () => {
+                    if (raf || !alive || !state.visible) return;
+                    last = performance.now();
+                    raf = requestAnimationFrame(frame);
+                };
+
+                const onEnter = event => {
+                    [state.pointerX, state.pointerY] = local(event);
+                    state.hovered = true;
+                    if (s.hover === 'reveal' && state.reveal < 0.15) {
+                        state.phase = project(shapeFor(s), state.pointerX - s.thickness / 2, state.pointerY - s.thickness / 2);
+                        state.velocity = 0;
+                    }
+                    if (s.hover === 'lap' && state.lap < 0 && !reduce) state.lap = 0;
+                    wake();
+                };
+                const onLeave = () => {
+                    state.hovered = false;
+                    wake();
+                };
+                const pulse = origin => {
+                    if (!s.clickPulse) return;
+                    pulses.push({ origin, age: 0 });
+                    if (pulses.length > 4) pulses.shift();
+                    state.flash = 1;
+                    wake();
+                };
+                const onDown = event => {
+                    if (event.button !== 0 && event.pointerType === 'mouse') return;
+                    const [x, y] = local(event);
+                    pulse(project(shapeFor(s), x - s.thickness / 2, y - s.thickness / 2));
+                };
+                const onClick = event => {
+                    if (event.detail === 0) pulse(state.phase);
+                };
+                const onFocus = () => {
+                    state.focused = btn.matches(':focus-visible');
+                    if (state.focused && s.hover === 'lap' && state.lap < 0 && !reduce) state.lap = 0;
+                    wake();
+                };
+                const onBlur = () => {
+                    state.focused = false;
+                    wake();
+                };
+
+                const resizeObserver = new ResizeObserver(measure);
+                resizeObserver.observe(btn);
+                const visibility = new IntersectionObserver(entries => {
+                    state.visible = entries.some(entry => entry.isIntersecting);
+                    if (state.visible) wake();
+                });
+                visibility.observe(btn);
+                btn.addEventListener('pointerenter', onEnter);
+                btn.addEventListener('pointerleave', onLeave);
+                btn.addEventListener('pointerdown', onDown);
+                btn.addEventListener('click', onClick);
+                btn.addEventListener('focus', onFocus);
+                btn.addEventListener('blur', onBlur);
+                measure();
+            };
+
             window.initStatusSystem();
             document.getElementById('tabLogin').addEventListener('click', e => { e.preventDefault(); window.switchAuthTab('login'); });
             document.getElementById('tabRegister').addEventListener('click', e => { e.preventDefault(); window.switchAuthTab('register'); });
@@ -4964,9 +5699,11 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
             document.getElementById('noteSearch')?.addEventListener('input', renderAcademic);
             document.getElementById('libSearch')?.addEventListener('input', renderLibrary);
             document.getElementById('ca3Search')?.addEventListener('input', renderCA3Papers);
-            const tw = document.getElementById('tw'); const phrases = ["_INITIALIZING KNOWLEDGE BASE...", "_LOADING RESOURCES...", "_CONNECTING TO MSZ NETWORK...", "_ALL SYSTEMS READY."]; let pi = 0, ci = 0, del = false;
+            const tw = document.getElementById('tw'); const phrases = ["_INITIALIZING KNOWLEDGE BASE...", "_LOADING RESOURCES...", "_CONNECTING TO GZS NETWORK...", "_ALL SYSTEMS READY."]; let pi = 0, ci = 0, del = false;
             function type() { if (!del && ci < phrases[pi].length) { tw.innerHTML = phrases[pi].slice(0, ++ci) + '<span class="tw-cursor">▌</span>'; setTimeout(type, 70); } else if (!del && ci === phrases[pi].length) { del = true; setTimeout(type, 2200); } else if (del && ci > 0) { tw.innerHTML = phrases[pi].slice(0, --ci) + '<span class="tw-cursor">▌</span>'; setTimeout(type, 28); } else { del = false; pi = (pi + 1) % phrases.length; setTimeout(type, 400); } }
             type();
+            if (window.initHeroStrokeText) window.initHeroStrokeText();
+            if (window.initHeroStarBorder) window.initHeroStarBorder();
             window.loadAll().then(() => {
                 const loader = document.getElementById('globalLoader');
                 if (loader) {
@@ -8493,12 +9230,45 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             box-shadow: 0 0 8px var(--acid);
         }
 
+        .stroke-text {
+            display: block;
+            width: 100%;
+            line-height: 0;
+        }
+
+        .stroke-text--hover {
+            cursor: pointer;
+        }
+
+        .stroke-text__svg {
+            display: block;
+            width: 100%;
+            max-width: var(--stroke-text-width, 100%);
+            height: auto;
+            margin: 0;
+            overflow: visible;
+        }
+
+        .stroke-text__stroke,
+        .stroke-text__fill {
+            user-select: none;
+        }
+
+        .hero-title.stroke-hero-title {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 0 16px 0;
+            padding: 0;
+            line-height: 1;
+            overflow: visible;
+        }
+
         .hero-title {
             font-family: 'Unbounded', sans-serif;
-            font-size: clamp(3rem, 10vw, 9rem);
+            font-size: clamp(2.3rem, 7.8vw, 7.2rem);
             font-weight: 900;
-            line-height: 0.9;
-            letter-spacing: -3px;
+            line-height: 0.92;
+            letter-spacing: -2px;
             text-transform: uppercase;
             animation: fadeUp 0.8s 0.2s both;
         }
@@ -8506,18 +9276,46 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         .hero-title .line1 {
             display: block;
             color: var(--text);
+            line-height: 0.92;
+            margin: 0 0 6px 0;
+        }
+
+        .hero-title .line1 .stroke-text {
+            display: block;
+            width: 100%;
+            line-height: 0;
+        }
+
+        .hero-title .line1 .stroke-text__svg {
+            display: block;
+            width: 100%;
+            max-width: 900px;
+            height: auto;
+            margin: 0;
+            overflow: visible;
+        }
+
+        .hero-title .line1 .stroke-fallback {
+            display: block;
+            line-height: 0.92;
         }
 
         .hero-title .line2 {
             display: block;
-            -webkit-text-stroke: 1px rgba(200, 255, 0, 0.6);
+            -webkit-text-stroke: 1.5px rgba(200, 255, 0, 0.7);
             -webkit-text-fill-color: transparent;
+            line-height: 0.92;
+            margin: 0 0 6px 0;
+            letter-spacing: -2px;
         }
 
         .hero-title .line3 {
             display: block;
             color: var(--acid);
             position: relative;
+            line-height: 0.92;
+            margin: 0;
+            letter-spacing: -2px;
         }
 
         .hero-title .line3::after {
@@ -8526,10 +9324,11 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             left: 0;
             top: 0;
             color: transparent;
-            -webkit-text-stroke: 1px var(--acid2);
+            -webkit-text-stroke: 1.5px var(--acid2);
             animation: glitch 5s ease-in-out infinite;
             clip-path: polygon(0 30%, 100% 30%, 100% 50%, 0 50%);
             opacity: 0.5;
+            pointer-events: none;
         }
 
         @keyframes glitch {
@@ -8640,7 +9439,8 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             cursor: pointer;
             transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
-            overflow: hidden;
+            overflow: visible;
+            isolation: isolate;
             box-shadow:
                 0 8px 25px rgba(139, 92, 246, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.3),
@@ -8648,6 +9448,21 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             z-index: 1;
+        }
+
+        .star-border {
+            position: relative;
+            isolation: isolate;
+        }
+
+        .star-border__light {
+            position: absolute;
+            top: -48px;
+            left: -48px;
+            z-index: 1;
+            width: calc(100% + 96px);
+            height: calc(100% + 96px);
+            pointer-events: none;
         }
 
         .btn-premium::before {
@@ -8707,7 +9522,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
 
         .btn-premium span {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -15738,16 +16553,19 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             border-radius: 4px;
         }
 
-        /* Course Announcement Banner */
+        /* Course Announcement Banner & Public Ticker */
         .announcement-banner-container {
             display: none;
             flex: 1;
             justify-content: center;
             align-items: center;
-            padding: 0 10px;
+            padding: 0 12px;
             opacity: 0;
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            transform: translateY(-20px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            transform: translateY(-8px);
+            pointer-events: none;
+            overflow: hidden;
+            max-width: 100%;
         }
 
         .announcement-banner-container.show {
@@ -15759,96 +16577,284 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         .announcement-banner {
             display: inline-flex;
             align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 6px 16px;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            background: rgba(13, 14, 24, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 4px 14px 4px 7px;
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
             cursor: default;
-            transition: all 0.3s ease;
-            animation: pulse-border 3s infinite, slideDownFade 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            max-width: 500px;
+            transition: all 0.25s ease;
+            max-width: 520px;
+            width: auto;
+            pointer-events: auto;
+            overflow: hidden;
+            position: relative;
+            height: 36px;
+            box-sizing: border-box;
+            user-select: none;
         }
 
-        @keyframes slideDownFade {
+        .announcement-banner.clickable {
+            cursor: pointer;
+        }
+
+        .announcement-banner.clickable:hover {
+            background: rgba(20, 22, 36, 0.95);
+            border-color: rgba(200, 255, 0, 0.45);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55), 0 0 16px rgba(200, 255, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .announcement-banner-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .announcement-banner-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .announcement-default-icon {
+            font-size: 0.85rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .announcement-banner-body {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            mask-image: linear-gradient(to right, transparent, black 6px, black calc(100% - 6px), transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 6px, black calc(100% - 6px), transparent);
+        }
+
+        .announcement-ticker-track {
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            will-change: transform;
+        }
+
+        .announcement-ticker-content {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #f2f5f8;
+            letter-spacing: 0.2px;
+            display: inline-block;
+            padding-right: 32px;
+        }
+
+        /* Marquee Continuous Scrolling */
+        @keyframes announcementTickerScroll {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .announcement-ticker-track.is-scrolling {
+            animation: announcementTickerScroll var(--ticker-duration, 16s) linear infinite;
+        }
+
+        .announcement-banner:hover .announcement-ticker-track.is-scrolling {
+            animation-play-state: paused;
+        }
+
+        /* Entering & Exiting transition for banner rotation */
+        .announcement-banner.anim-enter {
+            animation: announcementEnterAnim 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .announcement-banner.anim-exit {
+            animation: announcementExitAnim 0.35s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+        }
+
+        @keyframes announcementEnterAnim {
             0% {
                 opacity: 0;
-                transform: translateY(-30px) scale(0.95);
+                transform: translateY(-8px) scale(0.96);
             }
-
             100% {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
         }
 
-        .announcement-banner:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-        }
-
-        .announcement-banner img {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-            display: block;
-            /* Ensure it displays correctly */
-        }
-
-        .announcement-banner-text {
-            font-size: 0.85rem;
-            color: var(--text);
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .announcement-banner-title {
-            font-weight: 700;
-            margin-right: 4px;
-            color: var(--primary);
-        }
-
-        @media (max-width: 768px) {
-            .announcement-banner-container {
-                position: absolute;
-                top: 110%;
-                left: 0;
-                width: 100%;
-                padding: 0 16px;
-                justify-content: center;
+        @keyframes announcementExitAnim {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
             }
-
-            .announcement-banner {
-                width: 100%;
-                max-width: 100%;
-            }
-        }
-
-        .typing-cursor {
-            display: inline-block;
-            width: 2px;
-            height: 12px;
-            background: var(--primary);
-            margin-left: 2px;
-            animation: blink 1s step-end infinite;
-            vertical-align: middle;
-        }
-
-        @keyframes blink {
-            50% {
+            100% {
                 opacity: 0;
+                transform: translateY(8px) scale(0.96);
             }
         }
 
-        @keyframes pulse-border {
+        .announcement-link-badge {
+            font-size: 0.65rem;
+            color: var(--muted);
+            margin-left: 2px;
+            opacity: 0.65;
+            transition: opacity 0.2s, color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .announcement-banner:hover .announcement-link-badge {
+            opacity: 1;
+            color: var(--acid);
+        }
+
+        /* Responsive Breakpoints for Ticker */
+        @media (max-width: 768px) {
+            .announcement-banner {
+                max-width: 90vw;
+                height: 32px;
+                padding: 3px 10px 3px 6px;
+                gap: 6px;
+            }
+            .announcement-banner-icon {
+                width: 18px;
+                height: 18px;
+            }
+            .announcement-default-icon {
+                font-size: 0.75rem;
+            }
+            .announcement-ticker-content {
+                font-size: 0.72rem;
+                padding-right: 20px;
+            }
+            body.has-active-announcement .logo-text {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .announcement-banner {
+                max-width: 82vw;
+            }
+            body.has-active-announcement .nav-actions .perf-toggle,
+            body.has-active-announcement .nav-actions #statusButton {
+                display: none;
+            }
+        }
+
+        /* Announcement Manager Modal Custom Styles */
+        .cam-tab-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Unbounded', sans-serif;
+        }
+
+        .cam-tab-btn.active {
+            background: var(--acid);
+            color: #000;
+            border-color: var(--acid);
+            font-weight: 600;
+        }
+
+        .cam-toggle-group {
+            display: inline-flex;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .cam-toggle-item {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cam-toggle-item.active-on {
+            background: #00e676;
+            color: #000;
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+        }
+
+        .cam-toggle-item.active-off {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .cam-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .cam-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .cam-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .cam-badge.active {
+            background: rgba(0, 230, 118, 0.15);
+            color: #00e676;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+
+        .cam-badge.inactive {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
             0% {
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             }
@@ -16774,7 +17780,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
 <body data-theme="0">
     <div id="globalLoader" class="global-loader">
         <div class="loader-spinner"></div>
-        <div class="loader-text">LOADING MSZ...</div>
+        <div class="loader-text">LOADING GZS...</div>
     </div>
     <div class="auth-overlay" id="authOverlay" style="display: none !important;">
         <video autoplay muted loop playsinline preload="auto" disablePictureInPicture class="auth-bg-video"
@@ -16935,12 +17941,12 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         </div>
     </div>
     <div class="top-ticker">
-        <div class="ticker-track"><span>MSZ — MAKAUT STUDY ZONE</span><span class="ticker-sep">·</span><span>EST. 2025 ·
+        <div class="ticker-track"><span>GZS — GEN-ZINEERS FOR MAKAUTIANS</span><span class="ticker-sep">·</span><span>EST. 2025 ·
                 KOLKATA · ENGINEERING EXCELLENCE</span><span class="ticker-sep">·</span><span>NOTES · PYQ · ORGANIZER ·
                 LECTURES
                 · LIBRARY · DOUBT ZONE · GATE DB · CA PAPERS</span><span class="ticker-sep">·</span><span>DEVELOPED BY
                 JEET
-                PATHAK</span><span class="ticker-sep">·</span><span>MSZ — MAKAUT STUDY ZONE</span><span
+                PATHAK</span><span class="ticker-sep">·</span><span>GZS — GEN-ZINEERS FOR MAKAUTIANS</span><span
                 class="ticker-sep">·</span><span>EST. 2025 · KOLKATA · ENGINEERING EXCELLENCE</span><span
                 class="ticker-sep">·</span><span>ALL SYSTEMS OPERATIONAL</span><span class="ticker-sep">·</span></div>
     </div>
@@ -17051,7 +18057,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         <div class="staggered-menu-panel" id="staggered-menu-panel">
             <div class="sm-inner">
                 <div class="sm-header">
-                    <span class="sm-brand">MAKAUT STUDY ZONE</span>
+                    <span class="sm-brand">GEN-ZINEERS FOR MAKAUTIANS</span>
                 </div>
                 <nav class="sm-nav">
                     <a class="sm-link" onclick="window.nav('home'); window.closeDesktopMenu();"><span
@@ -17099,8 +18105,8 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         <div class="logo-wrap" onclick="window.nav('home')">
             <div class="logo-mark"><img loading="lazy"
                     src="https://www.image2url.com/r2/default/images/1781563456237-e934b80f-374f-4671-809a-be601354e69a.png"
-                    alt="MSZ"></div>
-            <div class="logo-text"><em>M</em>SZ</div>
+                    alt="GZS"></div>
+            <div class="logo-text"><em>G</em>ZS</div>
         </div>
         <div id="announcement-banner-container" class="announcement-banner-container"></div>
         <div class="nav-actions"><button class="nav-pill mode-toggle" id="modeToggleBtn" type="button"
@@ -17184,13 +18190,16 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 <div class="hero-tag-line"></div>
             </div>
             <div class="tw-line" id="tw"></div>
-            <h1 class="hero-title"><span class="line1">MAKAUT</span><span class="line2">Study</span><span class="line3"
-                    data-text="Zone">Zone</span></h1>
+            <h1 class="hero-title stroke-hero-title" aria-label="GEN-ZINEERS FOR MAKAUTIANS">
+                <span class="line1" id="heroStrokeText"><span class="stroke-fallback">GEN-ZINEERS</span></span>
+                <span class="line2">FOR</span>
+                <span class="line3" data-text="MAKAUTIANS">MAKAUTIANS</span>
+            </h1>
             <div class="hero-sub">
                 <p>Engineering excellence through shared knowledge. Curated resources, organized brilliantly.</p>
             </div>
             <div class="hero-actions">
-                <a onclick="window.renderCourses(); window.nav('premium-courses')" class="btn-premium"><span><i
+                <a onclick="window.renderCourses(); window.nav('premium-courses')" class="btn-premium star-border" id="btnPremiumHero"><canvas class="star-border__light" aria-hidden="true"></canvas><span><i
                             class="fas fa-crown"></i> Premium Courses</span></a>
                 <a onclick="nav('academic')" class="btn-acid"><span><i class="fas fa-database"></i>
                         &nbsp;Explore Notes</span></a>
@@ -17209,7 +18218,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     <div class="hstat-l">Streams</div>
                 </div>
             </div>
-            <div class="hero-watermark">MSZ</div>
+            <div class="hero-watermark">GZS</div>
         </div>
 
         <div class="sec">
@@ -17256,7 +18265,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 <div class="qcard" onclick="nav('suggestions')" style="--c:var(--violet)">
                     <div class="qcard-ico"><i class="fas fa-lightbulb"></i></div>
                     <div class="qcard-name">Suggestions</div>
-                    <div class="qcard-desc">Tips & updates from MSZ admins</div>
+                    <div class="qcard-desc">Tips & updates from GZS admins</div>
                     <div class="qcard-arrow"><span>Open</span><i class="fas fa-arrow-right"></i></div>
                 </div>
                 <div class="qcard" onclick="nav('whatsapp')" style="--c:#25d366">
@@ -18445,7 +19454,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             a.href = window._currentPrintBlobUrl;
             const rawTitle = window._activeNoteTitle || 'Lecture_Notes';
             const cleanTitle = rawTitle.replace(/[^a-zA-Z0-9_-]/g, '_');
-            a.download = cleanTitle + '_WATERMARKED_MSZ.pdf';
+            a.download = cleanTitle + '_WATERMARKED_GZS.pdf';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -18521,7 +19530,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     const tA = 35;
                     for (let ty = -100; ty < h + 200; ty += 140) {
                         for (let tx = -200; tx < w + 200; tx += 220) {
-                            pg.drawText('MAKAUT STUDY ZONE', { x: tx, y: ty, size: 14, font: hFont, color: rgb(0.65, 0.65, 0.65), opacity: 0.13, rotate: degrees(tA) });
+                            pg.drawText('GEN-ZINEERS FOR MAKAUTIANS', { x: tx, y: ty, size: 14, font: hFont, color: rgb(0.65, 0.65, 0.65), opacity: 0.13, rotate: degrees(tA) });
                         }
                     }
                     // LAYER 3: User identity grid
@@ -18533,9 +19542,9 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     }
                     // LAYER 4: Main centered watermark
                     const a = 45, cA = Math.cos(a * Math.PI / 180), sA = Math.sin(a * Math.PI / 180), cx = w / 2, cy = h / 2;
-                    const mS = Math.min(42, w * 0.065);
-                    const mW = hBold.widthOfTextAtSize('MAKAUT STUDY ZONE', mS);
-                    pg.drawText('MAKAUT STUDY ZONE', { x: cx - (mW / 2) * cA, y: cy - (mW / 2) * sA, size: mS, font: hBold, color: rgb(0.42, 0.42, 0.42), opacity: 0.45, rotate: degrees(a) });
+                    const mS = Math.min(36, w * 0.055);
+                    const mW = hBold.widthOfTextAtSize('GEN-ZINEERS FOR MAKAUTIANS', mS);
+                    pg.drawText('GEN-ZINEERS FOR MAKAUTIANS', { x: cx - (mW / 2) * cA, y: cy - (mW / 2) * sA, size: mS, font: hBold, color: rgb(0.42, 0.42, 0.42), opacity: 0.45, rotate: degrees(a) });
                     // Decorative lines
                     const lO = 34, lL = mW * 0.6;
                     pg.drawLine({ start: { x: cx - (lL / 2) * cA + lO * sA, y: cy - (lL / 2) * sA - lO * cA }, end: { x: cx + (lL / 2) * cA + lO * sA, y: cy + (lL / 2) * sA - lO * cA }, thickness: 0.6, color: rgb(0.5, 0.5, 0.5), opacity: 0.30 });
@@ -18554,7 +19563,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     pg.drawLine({ start: { x: 30, y: h - 28 }, end: { x: w - 30, y: h - 28 }, thickness: 0.5, color: rgb(0.7, 0.1, 0.1), opacity: 0.40 });
                     // LAYER 6: Bottom bar
                     const nd = new Date(), ds = nd.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }), ts = nd.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-                    const bT = 'Licensed to: ' + userName + ' | ' + userPhone + ' | Printed: ' + ds + ' ' + ts + ' | Page ' + (pgNum) + '/' + totalPg + ' | MAKAUT STUDY ZONE';
+                    const bT = 'Licensed to: ' + userName + ' | ' + userPhone + ' | Printed: ' + ds + ' ' + ts + ' | Page ' + (pgNum) + '/' + totalPg + ' | GEN-ZINEERS FOR MAKAUTIANS';
                     const bS = Math.min(7, w * 0.011), bW = hFont.widthOfTextAtSize(bT, bS);
                     pg.drawLine({ start: { x: 30, y: 18 }, end: { x: w - 30, y: 18 }, thickness: 0.5, color: rgb(0.4, 0.4, 0.4), opacity: 0.35 });
                     pg.drawText(bT, { x: Math.max(20, w / 2 - bW / 2), y: 8, size: bS, font: hFont, color: rgb(0.4, 0.4, 0.4), opacity: 0.55 });
@@ -18562,14 +19571,14 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     const eT = 'MADE FOR OUR ' + userName + ' CUTIE', eS = Math.min(9, w * 0.014), eW = hFont.widthOfTextAtSize(eT, eS);
                     pg.drawText(eT, { x: w - 18, y: h / 2 - eW / 2, size: eS, font: hFont, color: rgb(0.5, 0.5, 0.5), opacity: 0.42, rotate: degrees(90) });
                     // LAYER 8: Left edge
-                    const lT = userName + ' - ' + userPhone + ' - MAKAUT STUDY ZONE', lS2 = Math.min(8, w * 0.012), lW2 = hFont.widthOfTextAtSize(lT, lS2);
+                    const lT = userName + ' - ' + userPhone + ' - GEN-ZINEERS FOR MAKAUTIANS', lS2 = Math.min(8, w * 0.012), lW2 = hFont.widthOfTextAtSize(lT, lS2);
                     pg.drawText(lT, { x: 14, y: h / 2 + lW2 / 2, size: lS2, font: hFont, color: rgb(0.55, 0.55, 0.55), opacity: 0.35, rotate: degrees(-90) });
                     // LAYER 9: Corner stamps
                     const cs2 = 7;
-                    pg.drawText('MSZ', { x: 12, y: h - 12, size: cs2, font: hBold, color: rgb(0.6, 0.6, 0.6), opacity: 0.25 });
-                    pg.drawText('MSZ', { x: w - 28, y: h - 12, size: cs2, font: hBold, color: rgb(0.6, 0.6, 0.6), opacity: 0.25 });
-                    pg.drawText('MSZ', { x: 12, y: 4, size: cs2, font: hBold, color: rgb(0.6, 0.6, 0.6), opacity: 0.25 });
-                    pg.drawText('MSZ', { x: w - 28, y: 4, size: cs2, font: hBold, color: rgb(0.6, 0.6, 0.6), opacity: 0.25 });
+                    pg.drawText('GZS', { x: 12, y: h - 12, size: cs2, font: hBold, color: rgb(0.6, 0.6, 0.6), opacity: 0.25 });
+                    pg.drawText('GZS', { x: w - 28, y: h - 12, size: cs2, font: hBold, color: rgb(0.6, 0.6, 0.6), opacity: 0.25 });
+                    pg.drawText('GZS', { x: 12, y: 4, size: cs2, font: hBold, color: rgb(0.6, 0.6, 0.6), opacity: 0.25 });
+                    pg.drawText('GZS', { x: w - 28, y: 4, size: cs2, font: hBold, color: rgb(0.6, 0.6, 0.6), opacity: 0.25 });
                 }
 
                 // === FETCH LOGO ===
@@ -19493,7 +20502,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 </div>
                 <div class="road-item">
                     <div class="road-phase">Future</div>
-                    <div class="road-text">Mobile App for MSZ resources.</div>
+                    <div class="road-text">Mobile App for GZS resources.</div>
                 </div>
             </div>
         </div>
@@ -19504,12 +20513,12 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             <div class="page-banner-kicker">
                 <div class="kicker-line"></div>Admin Updates
             </div>
-            <h1 class="page-banner-title"><span class="accent">MSZ</span> <span class="stroke">Suggestions</span></h1>
-            <p class="page-banner-sub">Tips & updates posted by MSZ admins</p>
+            <h1 class="page-banner-title"><span class="accent">GZS</span> <span class="stroke">Suggestions</span></h1>
+            <p class="page-banner-sub">Tips & updates posted by GZS admins</p>
         </div>
         <div class="sec">
             <div class="sec-label">From Admins</div>
-            <h2 class="sec-heading">MSZ <span class="hi3">Suggestions</span></h2>
+            <h2 class="sec-heading">GZS <span class="hi3">Suggestions</span></h2>
         </div>
         <div class="sug-grid" id="sugGrid"></div>
         <div style="height:80px"></div>
@@ -19590,7 +20599,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                         <div class="profile-header">
                             <div class="profile-ava"><i class="fas fa-user-graduate"></i></div>
                             <div class="profile-name" id="profName">Loading...</div>
-                            <div class="profile-role">MSZ Student Account</div>
+                            <div class="profile-role">GZS Student Account</div>
                         </div>
                         <div class="profile-detail"><span class="pd-lbl">College</span><span class="pd-val"
                                 id="profCollege">—</span>
@@ -19660,7 +20669,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                         </h3>
                         <p
                             style="font-family:'Inter', sans-serif; font-size: 0.85rem; color: var(--muted, #aaa); margin: 0 0 16px 0; line-height: 1.5;">
-                            Install MAKAUT STUDY ZONE for faster and easier access.</p>
+                            Install GEN-ZINEERS for faster and easier access.</p>
                         <button id="pwaInstallBtnProf" class="profile-logout"
                             style="background: linear-gradient(135deg, #6D28D9, #A855F7); color: white; border: none; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); margin: 0; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-family:'Inter',sans-serif; padding: 14px; border-radius: 12px;">
                             <i class="fas fa-download"></i> Install App
@@ -19673,7 +20682,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                         </h3>
                         <p
                             style="font-family:'Inter', sans-serif; font-size: 0.85rem; color: var(--muted, #aaa); margin: 0 0 16px 0; line-height: 1.5;">
-                            Install MAKAUT STUDY ZONE on your device.</p>
+                            Install GEN-ZINEERS on your device.</p>
                         <div id="pwaManualText"
                             style="font-family:'Inter', sans-serif; font-size: 0.85rem; color: rgba(255, 255, 255, 0.85); background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); line-height: 1.6;">
                             <!-- Dynamic instructions injected here -->
@@ -19686,14 +20695,14 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                         </div>
                         <p
                             style="font-family:'Inter', sans-serif; font-size: 0.85rem; color: var(--muted, #aaa); margin: 8px 0 0 0; line-height: 1.5;">
-                            MAKAUT STUDY ZONE is already installed on your device.</p>
+                            GEN-ZINEERS is already installed on your device.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
     <div class="footer">
-        <div class="footer-line"></div>MSZ_SYS · MAKAUT Study Zone · All Systems Operational · v5.0
+        <div class="footer-line"></div>GZS_SYS · GEN-ZINEERS FOR MAKAUTIANS · All Systems Operational · v5.0
     </div>
 
     <div class="modal-overlay" id="modal"><button class="close-btn" onclick="closeModal()"><i
@@ -20004,7 +21013,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         <div id="apAuthenticated" style="display:none;min-height:100vh">
             <div class="ap-wrap">
                 <div class="ap-sidebar">
-                    <div class="ap-logo-bar">MSZ Panel</div>
+                    <div class="ap-logo-bar">GZS Panel</div>
                     <div class="ap-nav">
                         <div class="ap-nav-item active" onclick="apNav('dashboard')"><i
                                 class="fas fa-tachometer-alt"></i> Dashboard
@@ -20198,12 +21207,14 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     <div class="ap-sec" id="ap-courses">
                         <div class="ap-hdr">
                             <h2>Course Manager</h2>
-                            <div style="display: flex; gap: 10px;">
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <button class="ap-btn" style="background:var(--warm);color:var(--ink)"
                                     onclick="window.openDonationManager()"><i class="fas fa-heart"></i>
                                     Donation</button>
                                 <button class="ap-btn" onclick="window.openCourseEditor()"><i class="fas fa-plus"></i>
                                     Add Course</button>
+                                <button class="ap-btn" onclick="window.openCourseAnnouncementManager()"><i class="fas fa-bullhorn"></i>
+                                    Announcement</button>
                             </div>
                         </div>
                         <div id="apCoursesList"
@@ -21926,7 +22937,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 const applyLogo = () => {
                     const logoMark = document.querySelector('.logo-mark');
                     if (logoMark) {
-                        logoMark.innerHTML = `<img loading="lazy" src="${imgUrl}" alt="MSZ" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+                        logoMark.innerHTML = `<img loading="lazy" src="${imgUrl}" alt="GZS" style="width:100%;height:100%;object-fit:cover;display:block;">`;
                         logoMark.style.overflow = 'hidden';
                         logoMark.style.background = 'transparent';
                     }
@@ -22498,10 +23509,10 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
             <div class="pwa-nup-header">
                 <img class="pwa-nup-logo"
                     src="https://www.image2url.com/r2/default/images/1784836708632-21ae7d6e-785e-4bc2-b60e-4ba435edc6a4.png"
-                    alt="MAKAUT STUDY ZONE">
+                    alt="GEN-ZINEERS">
                 <div class="pwa-nup-title-area">
                     <span class="pwa-nup-welcome">Welcome to</span>
-                    <h3 class="pwa-nup-title">MAKAUT STUDY ZONE</h3>
+                    <h3 class="pwa-nup-title">GEN-ZINEERS</h3>
                 </div>
             </div>
             <div class="pwa-nup-body">
@@ -23874,263 +24885,746 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
             };
 
             initDonors();
-            window.updateAnnouncementBanner = (page, subjectId) => {
+            window.getCamData = (a) => {
+                if (!a) return null;
+                let linkUrl = a.linkUrl || a.linkurl || '';
+                let title = (a.title || '').trim();
+                if (!linkUrl && title.startsWith('LINK:')) {
+                    linkUrl = title.substring(5).trim();
+                    title = '';
+                } else if (!linkUrl && (title.startsWith('http://') || title.startsWith('https://'))) {
+                    linkUrl = title.trim();
+                    title = '';
+                }
+                let text = (a.text || a.message || '').trim();
+                if (title && !title.startsWith('LINK:') && !title.startsWith('http')) {
+                    if (!text.toLowerCase().includes(title.toLowerCase())) {
+                        text = (title + ' ' + text).trim();
+                    }
+                }
+                if (!text && title) text = title;
+                return {
+                    id: a.id,
+                    subjectId: a.subjectId || a.subjectid || 'ALL',
+                    text: text,
+                    imageUrl: a.imageUrl || a.imageurl || '',
+                    linkUrl: linkUrl,
+                    isActive: a.isActive !== false && a.isactive !== false,
+                    createdAt: a.createdAt || a.createdat || ''
+                };
+            };
+
+            window._announcementRotateTimer = null;
+            window._currentAnnouncementIndex = 0;
+
+            window.updateAnnouncementBanner = (page, targetId) => {
                 const container = document.getElementById('announcement-banner-container');
                 if (!container) return;
-                if (page !== 'subject-dashboard') {
+
+                const activePage = page || document.querySelector('.page.active')?.id.replace('page-', '') || '';
+                const isCoursePage = activePage === 'subject-dashboard' || activePage === 'course-dashboard' || activePage === 'premium-courses';
+
+                if (!isCoursePage) {
                     container.classList.remove('show');
+                    document.body.classList.remove('has-active-announcement');
+                    if (window._announcementRotateTimer) {
+                        clearInterval(window._announcementRotateTimer);
+                        window._announcementRotateTimer = null;
+                    }
                     return;
                 }
-                const now = new Date();
-                const activeAnnouncements = (window.COURSE_ANNOUNCEMENTS || []).filter(a => {
-                    if (!a.isActive || a.subjectId !== subjectId) return false;
-                    if (a.startDate && new Date(a.startDate) > now) return false;
-                    if (a.endDate && new Date(a.endDate) < now) return false;
-                    return true;
-                }).sort((a, b) => {
-                    const getTime = (d) => {
-                        if (!d) return 0;
-                        if (d.seconds) return d.seconds * 1000;
-                        if (d.toDate) return d.toDate().getTime();
-                        return new Date(d).getTime();
-                    };
-                    return getTime(a.createdAt) - getTime(b.createdAt);
-                });
-                if (activeAnnouncements.length > 0) {
-                    const a = activeAnnouncements[activeAnnouncements.length - 1]; // latest
-                    let titleHtml = a.title ? `<span class="announcement-banner-title">${window.htmlEsc(a.title)}</span>` : '';
+
+                const currentSubjId = targetId || window.currentSubjectId;
+                const currentSubj = window.COURSE_SUBJECTS?.find(s => s.id === currentSubjId);
+                const currentCrsId = window.currentCourseId || currentSubj?.courseId;
+
+                const activeList = (window.COURSE_ANNOUNCEMENTS || [])
+                    .map(window.getCamData)
+                    .filter(a => {
+                        if (!a || !a.isActive || !a.text) return false;
+                        if (a.subjectId === 'ALL') return true;
+
+                        if (activePage === 'subject-dashboard') {
+                            if (a.subjectId === currentSubjId) return true;
+                            if (currentSubj && a.subjectId === currentSubj.courseId) return true;
+                            return false;
+                        }
+                        if (activePage === 'course-dashboard') {
+                            if (a.subjectId === currentCrsId) return true;
+                            const subj = window.COURSE_SUBJECTS?.find(s => s.id === a.subjectId);
+                            if (subj && subj.courseId === currentCrsId) return true;
+                            return false;
+                        }
+                        if (activePage === 'premium-courses') {
+                            return a.subjectId === 'ALL';
+                        }
+                        return false;
+                    });
+
+                if (!activeList.length) {
+                    container.classList.remove('show');
+                    document.body.classList.remove('has-active-announcement');
+                    if (window._announcementRotateTimer) {
+                        clearInterval(window._announcementRotateTimer);
+                        window._announcementRotateTimer = null;
+                    }
+                    return;
+                }
+
+                document.body.classList.add('has-active-announcement');
+                container.classList.add('show');
+
+                if (window._currentAnnouncementIndex >= activeList.length) {
+                    window._currentAnnouncementIndex = 0;
+                }
+
+                const renderPill = (idx, withAnim = true) => {
+                    const item = activeList[idx];
+                    if (!item) return;
+
+                    const isClickable = !!item.linkUrl;
+                    const iconHtml = item.imageUrl
+                        ? `<img src="${window.htmlEsc(item.imageUrl)}" alt="Icon" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';"><span class="announcement-default-icon" style="display:none;">🧑‍💻</span>`
+                        : `<span class="announcement-default-icon">🧑‍💻</span>`;
+                    const linkBadge = isClickable
+                        ? `<div class="announcement-link-badge" title="Open Link"><i class="fas fa-external-link-alt"></i></div>`
+                        : '';
 
                     container.innerHTML = `
-                    <div class="announcement-banner">
-                        ${a.imageUrl ? `<img src="" id="actualBannerImg" style="display:none;" alt="Icon">` : ''}
-                        <div class="announcement-banner-text">
-                            ${titleHtml}
-                            <span id="typing-announcement"></span><span class="typing-cursor"></span>
+                        <div class="announcement-banner ${isClickable ? 'clickable' : ''} ${withAnim ? 'anim-enter' : ''}" 
+                             id="activeAnnouncementPill"
+                             ${isClickable ? `onclick="window.openAnnouncementLink('${window.htmlEsc(item.linkUrl)}', event)"` : ''}>
+                            <div class="announcement-banner-icon">
+                                ${iconHtml}
+                            </div>
+                            <div class="announcement-banner-body">
+                                <div class="announcement-ticker-track" id="camTickerTrack">
+                                    <span class="announcement-ticker-content" id="camTickerText">${window.htmlEsc(item.text)}</span>
+                                </div>
+                            </div>
+                            ${linkBadge}
                         </div>
-                    </div>
-                `;
-                    if (a.imageUrl) {
-                        const imgEl = document.getElementById('actualBannerImg');
-                        if (imgEl) {
-                            imgEl.src = a.imageUrl;
-                            imgEl.style.display = 'block';
-                        }
-                    }
-                    container.classList.add('show');
+                    `;
 
-                    // Typewriter effect
-                    const targetEl = document.getElementById('typing-announcement');
-                    const fullText = a.message || '';
-                    targetEl.textContent = '';
-                    let charIndex = 0;
-                    if (window._typingInterval) clearInterval(window._typingInterval);
-                    window._typingInterval = setInterval(() => {
-                        if (charIndex < fullText.length) {
-                            targetEl.textContent += fullText.charAt(charIndex);
-                            charIndex++;
+                    requestAnimationFrame(() => {
+                        const track = document.getElementById('camTickerTrack');
+                        const textEl = document.getElementById('camTickerText');
+                        const bodyEl = container.querySelector('.announcement-banner-body');
+                        if (track && textEl && bodyEl) {
+                            const textWidth = textEl.getBoundingClientRect().width;
+                            const bodyWidth = bodyEl.getBoundingClientRect().width;
+                            if (textWidth > bodyWidth - 10) {
+                                const dup = document.createElement('span');
+                                dup.className = 'announcement-ticker-content announcement-ticker-dup';
+                                dup.setAttribute('aria-hidden', 'true');
+                                dup.textContent = item.text;
+                                track.appendChild(dup);
+
+                                const duration = Math.max(10, Math.round(textWidth / 32));
+                                track.style.setProperty('--ticker-duration', `${duration}s`);
+                                track.classList.add('is-scrolling');
+                            }
+                        }
+                    });
+                };
+
+                renderPill(window._currentAnnouncementIndex, false);
+
+                if (window._announcementRotateTimer) {
+                    clearInterval(window._announcementRotateTimer);
+                    window._announcementRotateTimer = null;
+                }
+
+                if (activeList.length > 1) {
+                    window._announcementRotateTimer = setInterval(() => {
+                        const pill = document.getElementById('activeAnnouncementPill');
+                        if (pill && pill.matches(':hover')) {
+                            return; // Pause rotation on hover
+                        }
+                        if (pill) {
+                            pill.classList.remove('anim-enter');
+                            pill.classList.add('anim-exit');
+                            setTimeout(() => {
+                                window._currentAnnouncementIndex = (window._currentAnnouncementIndex + 1) % activeList.length;
+                                renderPill(window._currentAnnouncementIndex, true);
+                            }, 350);
                         } else {
-                            clearInterval(window._typingInterval);
-                            // Optional: remove cursor after typing is done
-                            // document.querySelector('.typing-cursor').style.display = 'none';
+                            window._currentAnnouncementIndex = (window._currentAnnouncementIndex + 1) % activeList.length;
+                            renderPill(window._currentAnnouncementIndex, true);
                         }
-                    }, 40);
+                    }, 7000);
+                }
+            };
 
-                } else {
-                    container.classList.remove('show');
+            window.openAnnouncementLink = (url, event) => {
+                if (event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+                if (!url) return;
+                try {
+                    let safeUrl = url.trim();
+                    if (!safeUrl.startsWith('http://') && !safeUrl.startsWith('https://')) {
+                        safeUrl = 'https://' + safeUrl;
+                    }
+                    window.open(safeUrl, '_blank', 'noopener,noreferrer');
+                } catch (e) {
+                    console.error('Failed to open link:', e);
                 }
             };
 
             // Hook into nav
             const _origNavBanner = window.nav;
-            window.nav = (page) => {
-                if (_origNavBanner) _origNavBanner(page);
-                if (window.updateAnnouncementBanner) window.updateAnnouncementBanner(page, window.currentSubjectId);
+            window.nav = (page, opts) => {
+                if (_origNavBanner) _origNavBanner(page, opts);
+                if (window.updateAnnouncementBanner) {
+                    window.updateAnnouncementBanner(page, window.currentSubjectId);
+                }
             };
 
             // --- Course Announcement Manager (Admin Panel) ---
             window.openCourseAnnouncementManager = () => {
+                if (!window.CURRENT_USER || window.CURRENT_USER.role !== 'admin') {
+                    return window.showToast('Unauthorized: Admin access required', 'err');
+                }
+
                 if (!document.getElementById('courseAnnouncementModal')) {
                     const modalHtml = `
-                <div class="edit-modal-overlay" id="courseAnnouncementModal">
-                    <div class="edit-modal-box" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                        <div class="edit-modal-title" id="camTitle">Announcement Manager</div>
-                        <button class="edit-close-btn" onclick="document.getElementById('courseAnnouncementModal').classList.remove('active')"><i class="fas fa-times"></i></button>
-                        <div id="camListSection" style="margin-top: 15px;">
-                            <button class="ap-btn" style="background:var(--primary);color:#fff;margin-bottom:15px;" onclick="window.openCamEditor()"><i class="fas fa-plus"></i> Create New</button>
-                            <div id="camList" style="display:flex;flex-direction:column;gap:10px;"></div>
-                        </div>
-                        <div id="camEditorSection" style="display:none; flex-direction:column; gap:12px; margin-top: 15px;">
-                            <select id="camSubject" class="auth-input">
-                                <option value="">Select Subject...</option>
-                            </select>
-                            <input type="text" id="camTitleInput" placeholder="Message Title (Optional)" class="auth-input">
-                            <textarea id="camMessage" placeholder="Announcement Message" class="auth-input" style="min-height:80px"></textarea>
-                            <input type="text" id="camImage" placeholder="PNG Image URL" class="auth-input">
-                            <div style="display:flex;gap:12px;">
-                                <div style="flex:1">
-                                    <label style="font-size:12px;color:var(--muted)">Start Date & Time</label>
-                                    <input type="datetime-local" id="camStart" class="auth-input">
+                    <div class="edit-modal-overlay" id="courseAnnouncementModal">
+                        <div class="edit-modal-box" style="max-width: 680px; max-height: 90vh; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+                                <div class="edit-modal-title" style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-bullhorn" style="color:var(--acid);"></i> Course Announcement Manager
                                 </div>
-                                <div style="flex:1">
-                                    <label style="font-size:12px;color:var(--muted)">End Date & Time (Optional)</label>
-                                    <input type="datetime-local" id="camEnd" class="auth-input">
-                                </div>
-                            </div>
-                            <label style="display:flex;align-items:center;gap:10px;color:var(--text);font-size:14px;cursor:pointer;">
-                                <input type="checkbox" id="camActive" checked> Enable Announcement
-                            </label>
-                            
-                            <div style="margin-top:10px;">
-                                <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px;">Live Preview</label>
-                                <div id="camPreviewContainer" style="position:relative;background:var(--card);padding:20px;border-radius:10px;display:flex;justify-content:center;min-height:80px;">
-                                    <div id="camPreviewBanner" class="announcement-banner" style="display:inline-flex;">
-                                        <img id="camPreviewImg" src="" style="display:none;" alt="">
-                                        <div class="announcement-banner-text"><span id="camPreviewTitle" class="announcement-banner-title"></span> <span id="camPreviewMsg"></span></div>
-                                    </div>
-                                </div>
+                                <button class="edit-close-btn" style="position:static;" onclick="document.getElementById('courseAnnouncementModal').classList.remove('active')"><i class="fas fa-times"></i></button>
                             </div>
 
-                            <div style="display:flex;gap:10px;margin-top:15px;">
-                                <button class="ap-btn" style="background:var(--primary);color:#fff" onclick="window.saveCam()">Save</button>
-                                <button class="ap-btn red" onclick="window.closeCamEditor()">Cancel</button>
+                            <!-- Tabs -->
+                            <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+                                <button id="camTabList" class="cam-tab-btn active" onclick="window.switchCamTab('list')">
+                                    <i class="fas fa-list"></i> Announcements (<span id="camCountBadge">0</span>)
+                                </button>
+                                <button id="camTabCreate" class="cam-tab-btn" onclick="window.switchCamTab('create')">
+                                    <i class="fas fa-plus"></i> <span id="camCreateBtnLabel">Create Announcement</span>
+                                </button>
+                            </div>
+
+                            <!-- Tab 1: List View -->
+                            <div id="camListSection">
+                                <div id="camList" style="display:flex; flex-direction:column; gap:12px;"></div>
+                            </div>
+
+                            <!-- Tab 2: Editor View -->
+                            <div id="camEditorSection" style="display:none; flex-direction:column; gap:14px;">
+                                <input type="hidden" id="camEditId" value="">
+                                <input type="hidden" id="camActiveState" value="true">
+
+                                <!-- Field A: Select Subject / Course -->
+                                <div>
+                                    <label style="font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">
+                                        Select Subject / Course *
+                                    </label>
+                                    <select id="camSubject" class="auth-input" style="width:100%; cursor:pointer;">
+                                        <option value="ALL">🌐 ALL COURSES / GENERAL (All Course Pages)</option>
+                                    </select>
+                                    <div style="font-size:0.7rem; color:var(--muted); margin-top:4px;">
+                                        Dynamically fetched from course database. Choose a specific subject or All Courses.
+                                    </div>
+                                </div>
+
+                                <!-- Field B: Announcement Text -->
+                                <div>
+                                    <label style="font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">
+                                        Announcement Text *
+                                    </label>
+                                    <textarea id="camMessage" class="auth-input ap-ta" rows="3" placeholder="e.g. 29th August Toder exam hobe sobai course theke por..."></textarea>
+                                    <div style="font-size:0.7rem; color:var(--muted); margin-top:4px;">
+                                        Enter any announcement text. It will scroll smoothly across the public ticker.
+                                    </div>
+                                </div>
+
+                                <!-- Field C: Image / Icon -->
+                                <div>
+                                    <label style="font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">
+                                        Thumbnail Image / Icon (Optional)
+                                    </label>
+                                    <div style="display:flex; gap:8px; align-items:center;">
+                                        <input type="text" id="camImage" placeholder="Image URL (or upload from device)" class="auth-input" style="flex:1;">
+                                        <input type="file" id="camFileInput" accept="image/*" style="display:none;" onchange="window.handleCamImageUpload(this)">
+                                        <button class="ap-btn" type="button" style="white-space:nowrap; padding:9px 14px; font-size:0.78rem;" onclick="document.getElementById('camFileInput').click()">
+                                            <i class="fas fa-upload"></i> Upload
+                                        </button>
+                                    </div>
+                                    <div style="font-size:0.7rem; color:var(--muted); margin-top:4px;">
+                                        Provide an image URL or upload directly. If left blank, the default 🧑‍💻 icon will be used.
+                                    </div>
+                                </div>
+
+                                <!-- Field E: Optional Link -->
+                                <div>
+                                    <label style="font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">
+                                        Destination Link / URL (Optional)
+                                    </label>
+                                    <input type="url" id="camLink" placeholder="https://... (Optional clickable destination link)" class="auth-input" style="width:100%;">
+                                    <div style="font-size:0.7rem; color:var(--muted); margin-top:4px;">
+                                        If provided, clicking the public ticker will safely open this link in a new tab.
+                                    </div>
+                                </div>
+
+                                <!-- Field D: Active / Inactive Status -->
+                                <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.03); padding:10px 14px; border-radius:10px; border:1px solid var(--border);">
+                                    <div>
+                                        <div style="font-size:0.82rem; font-weight:600; color:var(--text);">Activation Control</div>
+                                        <div style="font-size:0.72rem; color:var(--muted);">Only active announcements appear on public pages.</div>
+                                    </div>
+                                    <div class="cam-toggle-group">
+                                        <button type="button" id="camToggleOff" class="cam-toggle-item" onclick="window.setCamActiveState(false)">[ OFF ]</button>
+                                        <button type="button" id="camToggleOn" class="cam-toggle-item active-on" onclick="window.setCamActiveState(true)">[ ON ]</button>
+                                    </div>
+                                </div>
+
+                                <!-- Live Ticker Preview -->
+                                <div>
+                                    <label style="font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">
+                                        Live Ticker Preview
+                                    </label>
+                                    <div style="background:rgba(8,9,16,0.85); border:1px dashed var(--border); border-radius:12px; padding:18px; display:flex; justify-content:center; align-items:center; min-height:68px;">
+                                        <div id="camPreviewBanner" class="announcement-banner">
+                                            <div class="announcement-banner-icon">
+                                                <img id="camPreviewImg" src="" style="display:none;" alt="">
+                                                <span id="camPreviewDefaultIcon" class="announcement-default-icon">🧑‍💻</span>
+                                            </div>
+                                            <div class="announcement-banner-body">
+                                                <div class="announcement-ticker-track">
+                                                    <span class="announcement-ticker-content" id="camPreviewText">Your announcement will appear here...</span>
+                                                </div>
+                                            </div>
+                                            <div id="camPreviewLinkBadge" class="announcement-link-badge" style="display:none;" title="Open Link"><i class="fas fa-external-link-alt"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div style="display:flex; gap:10px; margin-top:8px;">
+                                    <button type="button" class="ap-btn" id="camSaveBtn" style="background:var(--acid); color:#000; font-weight:700; flex:1; padding:12px;" onclick="window.saveCam()">
+                                        <i class="fas fa-bullhorn"></i> Activate Announcement
+                                    </button>
+                                    <button type="button" class="ap-btn red" style="padding:12px 20px;" onclick="window.switchCamTab('list')">
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>`;
+                    </div>`;
+
                     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
                     const updatePreview = () => {
-                        const title = document.getElementById('camTitleInput').value;
-                        const msg = document.getElementById('camMessage').value;
-                        const img = document.getElementById('camImage').value;
-                        const titleEl = document.getElementById('camPreviewTitle');
-                        titleEl.textContent = title;
-                        titleEl.style.display = title ? 'inline' : 'none';
-                        document.getElementById('camPreviewMsg').textContent = msg || 'Your message will appear here...';
-                        const imgEl = document.getElementById('camPreviewImg');
-                        if (img) { imgEl.src = img; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; }
+                        const msg = document.getElementById('camMessage')?.value.trim() || '';
+                        const img = document.getElementById('camImage')?.value.trim() || '';
+                        const link = document.getElementById('camLink')?.value.trim() || '';
+
+                        const previewText = document.getElementById('camPreviewText');
+                        if (previewText) previewText.textContent = msg || 'Your announcement will appear here...';
+
+                        const previewImg = document.getElementById('camPreviewImg');
+                        const defaultIcon = document.getElementById('camPreviewDefaultIcon');
+                        if (img && previewImg && defaultIcon) {
+                            previewImg.src = img;
+                            previewImg.style.display = 'block';
+                            previewImg.onerror = () => {
+                                previewImg.style.display = 'none';
+                                defaultIcon.style.display = 'inline-flex';
+                            };
+                            defaultIcon.style.display = 'none';
+                        } else if (previewImg && defaultIcon) {
+                            previewImg.src = '';
+                            previewImg.style.display = 'none';
+                            defaultIcon.style.display = 'inline-flex';
+                        }
+
+                        const linkBadge = document.getElementById('camPreviewLinkBadge');
+                        const previewBanner = document.getElementById('camPreviewBanner');
+                        if (linkBadge && previewBanner) {
+                            if (link) {
+                                linkBadge.style.display = 'block';
+                                previewBanner.classList.add('clickable');
+                            } else {
+                                linkBadge.style.display = 'none';
+                                previewBanner.classList.remove('clickable');
+                            }
+                        }
                     };
-                    ['camTitleInput', 'camMessage', 'camImage'].forEach(id => {
-                        document.getElementById(id).addEventListener('input', updatePreview);
+
+                    ['camMessage', 'camImage', 'camLink'].forEach(id => {
+                        document.getElementById(id)?.addEventListener('input', updatePreview);
                     });
                 }
+
+                window.populateCamSubjectsDropdown();
                 window.renderCamList();
+                window.switchCamTab('list');
                 document.getElementById('courseAnnouncementModal').classList.add('active');
+            };
+
+            window.switchCamTab = (tab) => {
+                const listSec = document.getElementById('camListSection');
+                const editSec = document.getElementById('camEditorSection');
+                const tabList = document.getElementById('camTabList');
+                const tabCreate = document.getElementById('camTabCreate');
+
+                if (tab === 'create') {
+                    if (listSec) listSec.style.display = 'none';
+                    if (editSec) editSec.style.display = 'flex';
+                    if (tabList) tabList.classList.remove('active');
+                    if (tabCreate) tabCreate.classList.add('active');
+                    if (!window._currentCamEditId) {
+                        window.resetCamEditor();
+                    }
+                } else {
+                    if (listSec) listSec.style.display = 'block';
+                    if (editSec) editSec.style.display = 'none';
+                    if (tabList) tabList.classList.add('active');
+                    if (tabCreate) tabCreate.classList.remove('active');
+                    window._currentCamEditId = null;
+                    document.getElementById('camCreateBtnLabel').textContent = 'Create Announcement';
+                }
+            };
+
+            window.setCamActiveState = (isActive) => {
+                const hiddenInput = document.getElementById('camActiveState');
+                if (hiddenInput) hiddenInput.value = isActive ? 'true' : 'false';
+
+                const btnOn = document.getElementById('camToggleOn');
+                const btnOff = document.getElementById('camToggleOff');
+                if (isActive) {
+                    btnOn?.classList.add('active-on');
+                    btnOn?.classList.remove('active-off');
+                    btnOff?.classList.remove('active-off');
+                    btnOff?.classList.remove('active-on');
+                } else {
+                    btnOff?.classList.add('active-off');
+                    btnOff?.classList.remove('active-on');
+                    btnOn?.classList.remove('active-on');
+                    btnOn?.classList.remove('active-off');
+                }
+            };
+
+            window.populateCamSubjectsDropdown = () => {
+                const sel = document.getElementById('camSubject');
+                if (!sel) return;
+
+                let html = '<option value="ALL">🌐 ALL COURSES / GENERAL (All Course Pages)</option>';
+
+                const courses = window.COURSES || [];
+                const subjects = window.COURSE_SUBJECTS || [];
+
+                // Group by course
+                courses.forEach(c => {
+                    const cSubjs = subjects.filter(s => s.courseId === c.id && s.title);
+                    if (cSubjs.length > 0) {
+                        html += `<optgroup label="📚 ${window.htmlEsc(c.title)}">`;
+                        cSubjs.forEach(s => {
+                            html += `<option value="${s.id}">${window.htmlEsc(s.title)}</option>`;
+                        });
+                        html += `</optgroup>`;
+                    }
+                });
+
+                // Subjects with no course or other
+                const assignedSubjIds = new Set();
+                courses.forEach(c => {
+                    subjects.filter(s => s.courseId === c.id).forEach(s => assignedSubjIds.add(s.id));
+                });
+                const otherSubjs = subjects.filter(s => !assignedSubjIds.has(s.id) && s.title);
+                if (otherSubjs.length > 0) {
+                    html += `<optgroup label="Other Subjects">`;
+                    otherSubjs.forEach(s => {
+                        html += `<option value="${s.id}">${window.htmlEsc(s.title)}</option>`;
+                    });
+                    html += `</optgroup>`;
+                }
+
+                sel.innerHTML = html;
+            };
+
+            window.resetCamEditor = () => {
+                window._currentCamEditId = null;
+                const subjEl = document.getElementById('camSubject');
+                if (subjEl) subjEl.value = 'ALL';
+                const msgEl = document.getElementById('camMessage');
+                if (msgEl) msgEl.value = '';
+                const imgEl = document.getElementById('camImage');
+                if (imgEl) imgEl.value = '';
+                const linkEl = document.getElementById('camLink');
+                if (linkEl) linkEl.value = '';
+
+                window.setCamActiveState(true);
+
+                const saveBtn = document.getElementById('camSaveBtn');
+                if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-bullhorn"></i> Activate Announcement';
+                document.getElementById('camCreateBtnLabel').textContent = 'Create Announcement';
+
+                document.getElementById('camMessage')?.dispatchEvent(new Event('input'));
             };
 
             window.renderCamList = () => {
                 const list = document.getElementById('camList');
                 if (!list) return;
-                document.getElementById('camListSection').style.display = 'block';
-                document.getElementById('camEditorSection').style.display = 'none';
-                if (!window.COURSE_ANNOUNCEMENTS || !window.COURSE_ANNOUNCEMENTS.length) {
-                    list.innerHTML = '<div style="color:var(--muted)">No announcements found.</div>';
+
+                const countBadge = document.getElementById('camCountBadge');
+                const announcements = (window.COURSE_ANNOUNCEMENTS || []).map(window.getCamData).filter(Boolean);
+
+                if (countBadge) countBadge.textContent = announcements.length;
+
+                if (!announcements.length) {
+                    list.innerHTML = `
+                        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:30px;text-align:center;">
+                            <div style="font-size:2rem;margin-bottom:8px;">📢</div>
+                            <div style="font-weight:600;color:var(--text);margin-bottom:4px;">No Announcements Created</div>
+                            <div style="color:var(--muted);font-size:0.8rem;margin-bottom:16px;">Create announcements to broadcast important notices to students across courses.</div>
+                            <button class="ap-btn" style="background:var(--acid);color:#000;font-weight:600;" onclick="window.openCamEditor()"><i class="fas fa-plus"></i> Create First Announcement</button>
+                        </div>
+                    `;
                     return;
                 }
-                list.innerHTML = window.COURSE_ANNOUNCEMENTS.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(a => {
-                    const subject = window.COURSE_SUBJECTS.find(s => s.id === a.subjectId);
-                    const subjName = subject ? subject.title : 'Unknown Subject';
-                    return `
-                <div style="background:var(--card);padding:10px;border-radius:8px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                        <div style="font-weight:600;color:var(--text)">${window.htmlEsc(subjName)}</div>
-                        <div style="font-size:12px;color:var(--muted)">${window.htmlEsc(a.title || a.message)}</div>
-                        <div style="font-size:12px;color:${a.isActive ? 'var(--primary)' : '#ff4444'}">${a.isActive ? 'Active' : 'Disabled'}</div>
-                    </div>
-                    <div style="display:flex;gap:5px;">
-                        <button class="ap-btn" style="padding:4px 8px;font-size:12px;" onclick="window.openCamEditor('${a.id}')">Edit</button>
-                        <button class="ap-btn red" style="padding:4px 8px;font-size:12px;" onclick="window.deleteCam('${a.id}')">Delete</button>
-                    </div>
-                </div>`;
-                }).join('');
+
+                list.innerHTML = announcements
+                    .slice()
+                    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                    .map(a => {
+                        let targetName = '🌐 All Courses';
+                        if (a.subjectId && a.subjectId !== 'ALL') {
+                            const subj = window.COURSE_SUBJECTS?.find(s => s.id === a.subjectId);
+                            if (subj) {
+                                const crs = window.COURSES?.find(c => c.id === subj.courseId);
+                                targetName = subj.title + (crs ? ` (${crs.title})` : '');
+                            } else {
+                                const crs = window.COURSES?.find(c => c.id === a.subjectId);
+                                if (crs) targetName = `📚 ${crs.title}`;
+                                else targetName = a.subjectId;
+                            }
+                        }
+
+                        const dateStr = a.createdAt ? new Date(a.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+                        const iconHtml = a.imageUrl
+                            ? `<img src="${window.htmlEsc(a.imageUrl)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--border);" onerror="this.src='';this.nextElementSibling.style.display='inline-flex';"><span style="display:none;font-size:1.2rem;">🧑‍💻</span>`
+                            : `<span style="font-size:1.2rem;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:rgba(255,255,255,0.06);border-radius:50%;">🧑‍💻</span>`;
+
+                        const linkTag = a.linkUrl
+                            ? `<a href="${window.htmlEsc(a.linkUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--acid);font-size:0.75rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;" title="${window.htmlEsc(a.linkUrl)}"><i class="fas fa-link"></i> Link</a>`
+                            : '';
+
+                        return `
+                        <div class="cam-card">
+                            <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+                                <div style="flex-shrink:0;">
+                                    ${iconHtml}
+                                </div>
+                                <div style="min-width:0;flex:1;">
+                                    <div style="font-weight:600;color:var(--text);font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${window.htmlEsc(a.text)}">
+                                        ${window.htmlEsc(a.text)}
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap;">
+                                        <span class="cam-badge" style="background:rgba(255,255,255,0.05);color:var(--text);border:1px solid var(--border);">
+                                            ${window.htmlEsc(targetName)}
+                                        </span>
+                                        <span class="cam-badge ${a.isActive ? 'active' : 'inactive'}">
+                                            ${a.isActive ? '● ACTIVE' : '○ INACTIVE'}
+                                        </span>
+                                        ${linkTag}
+                                        ${dateStr ? `<span style="font-size:0.7rem;color:var(--muted);">${dateStr}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+                                <button class="ap-btn" style="padding:6px 12px;font-size:0.75rem;${a.isActive ? 'background:rgba(255,68,68,0.15);color:#ff4444;border-color:rgba(255,68,68,0.3);' : 'background:rgba(0,230,118,0.15);color:#00e676;border-color:rgba(0,230,118,0.3);'}" 
+                                        onclick="window.toggleCamActive('${a.id}', ${a.isActive}, event)" title="${a.isActive ? 'Turn Off' : 'Turn On'}">
+                                    ${a.isActive ? '<i class="fas fa-power-off"></i> Disable' : '<i class="fas fa-check"></i> Enable'}
+                                </button>
+                                <button class="ap-btn" style="padding:6px 10px;font-size:0.75rem;" onclick="window.openCamEditor('${a.id}')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="ap-btn red" style="padding:6px 10px;font-size:0.75rem;" onclick="window.deleteCam('${a.id}', event)" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        `;
+                    })
+                    .join('');
             };
 
             window.openCamEditor = (id = null) => {
                 window._currentCamEditId = id;
-                document.getElementById('camListSection').style.display = 'none';
-                document.getElementById('camEditorSection').style.display = 'flex';
+                window.populateCamSubjectsDropdown();
+                window.switchCamTab('create');
 
-                const subjSelect = document.getElementById('camSubject');
-                subjSelect.innerHTML = '<option value="">Select Subject...</option>' + window.COURSE_SUBJECTS.map(s => `<option value="${s.id}">${window.htmlEsc(s.title)}</option>`).join('');
+                if (id) {
+                    const raw = (window.COURSE_ANNOUNCEMENTS || []).find(x => x.id === id);
+                    const a = window.getCamData(raw);
+                    if (a) {
+                        const subjEl = document.getElementById('camSubject');
+                        if (subjEl) subjEl.value = a.subjectId || 'ALL';
+                        const msgEl = document.getElementById('camMessage');
+                        if (msgEl) msgEl.value = a.text || '';
+                        const imgEl = document.getElementById('camImage');
+                        if (imgEl) imgEl.value = a.imageUrl || '';
+                        const linkEl = document.getElementById('camLink');
+                        if (linkEl) linkEl.value = a.linkUrl || '';
 
-                const a = id ? window.COURSE_ANNOUNCEMENTS.find(x => x.id === id) : null;
-                document.getElementById('camSubject').value = a ? a.subjectId : (window.currentSubjectId || '');
-                document.getElementById('camTitleInput').value = a ? (a.title || '') : '';
-                document.getElementById('camMessage').value = a ? (a.message || '') : '';
-                document.getElementById('camImage').value = a ? (a.imageUrl || '') : '';
+                        window.setCamActiveState(a.isActive);
 
-                if (a && a.startDate) {
-                    const d = new Date(a.startDate);
-                    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-                    document.getElementById('camStart').value = d.toISOString().slice(0, 16);
+                        const saveBtn = document.getElementById('camSaveBtn');
+                        if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> Update Announcement';
+                        document.getElementById('camCreateBtnLabel').textContent = 'Edit Announcement';
+                    }
                 } else {
-                    const d = new Date();
-                    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-                    document.getElementById('camStart').value = d.toISOString().slice(0, 16);
+                    window.resetCamEditor();
                 }
-                if (a && a.endDate) {
-                    const d = new Date(a.endDate);
-                    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-                    document.getElementById('camEnd').value = d.toISOString().slice(0, 16);
-                } else {
-                    document.getElementById('camEnd').value = '';
-                }
-                document.getElementById('camActive').checked = a ? a.isActive : true;
 
-                document.getElementById('camTitleInput').dispatchEvent(new Event('input'));
+                document.getElementById('camMessage')?.dispatchEvent(new Event('input'));
             };
 
-            window.closeCamEditor = () => {
-                document.getElementById('camListSection').style.display = 'block';
-                document.getElementById('camEditorSection').style.display = 'none';
+            window.handleCamImageUpload = async (input) => {
+                const file = input?.files?.[0];
+                if (!file) return;
+                try {
+                    window.showToast('Uploading image to storage...');
+                    const url = await window.uploadFileToSupabase(file, 'materials');
+                    if (url) {
+                        const imgInput = document.getElementById('camImage');
+                        if (imgInput) {
+                            imgInput.value = url;
+                            imgInput.dispatchEvent(new Event('input'));
+                        }
+                        window.showToast('Image uploaded successfully', 'success');
+                    }
+                } catch (e) {
+                    console.error('Image upload failed:', e);
+                    window.showToast('Upload failed: ' + (e.message || e), 'err');
+                } finally {
+                    input.value = '';
+                }
             };
 
             window.saveCam = async () => {
-                const subjectId = document.getElementById('camSubject').value;
-                if (!subjectId) return window.showToast('Please select a subject', 'err');
-                const message = document.getElementById('camMessage').value;
-                if (!message) return window.showToast('Please enter a message', 'err');
+                if (!window.CURRENT_USER || window.CURRENT_USER.role !== 'admin') {
+                    return window.showToast('Unauthorized: Admin access required', 'err');
+                }
 
-                const data = {
-                    subjectId,
-                    title: document.getElementById('camTitleInput').value,
+                const subjectId = document.getElementById('camSubject')?.value || 'ALL';
+                const message = document.getElementById('camMessage')?.value.trim();
+                if (!message) {
+                    return window.showToast('Please enter announcement text', 'err');
+                }
+
+                const imageUrl = document.getElementById('camImage')?.value.trim() || '';
+                const linkUrl = document.getElementById('camLink')?.value.trim() || '';
+                const isActive = document.getElementById('camActiveState')?.value === 'true';
+
+                // Store linkUrl in title prefix for seamless database compatibility
+                const title = linkUrl ? ('LINK:' + linkUrl) : '';
+
+                const payload = {
+                    subjectId: subjectId,
+                    title: title,
                     message: message,
-                    imageUrl: document.getElementById('camImage').value,
-                    startDate: new Date(document.getElementById('camStart').value).toISOString(),
-                    endDate: document.getElementById('camEnd').value ? new Date(document.getElementById('camEnd').value).toISOString() : null,
-                    isActive: document.getElementById('camActive').checked
+                    imageUrl: imageUrl,
+                    isActive: isActive
                 };
+
+                const saveBtn = document.getElementById('camSaveBtn');
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                }
 
                 try {
                     if (window._currentCamEditId) {
-                        await window.fsUpdate('course_announcements', window._currentCamEditId, data);
+                        await window.fsUpdate('course_announcements', window._currentCamEditId, payload);
                         const idx = window.COURSE_ANNOUNCEMENTS.findIndex(x => x.id === window._currentCamEditId);
-                        if (idx !== -1) window.COURSE_ANNOUNCEMENTS[idx] = { ...window.COURSE_ANNOUNCEMENTS[idx], ...data };
-                        window.showToast('Announcement updated');
+                        if (idx !== -1) {
+                            window.COURSE_ANNOUNCEMENTS[idx] = {
+                                ...window.COURSE_ANNOUNCEMENTS[idx],
+                                ...payload,
+                                text: message,
+                                linkUrl: linkUrl
+                            };
+                        }
+                        window.showToast('Announcement updated successfully', 'success');
                     } else {
-                        data.createdAt = new Date().toISOString();
-                        const ref = await window.fsAdd('course_announcements', data);
-                        window.COURSE_ANNOUNCEMENTS.push({ id: ref.id, ...data });
-                        window.showToast('Announcement created');
+                        payload.createdAt = new Date().toISOString();
+                        const ref = await window.fsAdd('course_announcements', payload);
+                        window.COURSE_ANNOUNCEMENTS.unshift({
+                            id: ref.id,
+                            ...payload,
+                            text: message,
+                            linkUrl: linkUrl
+                        });
+                        window.showToast('Announcement activated successfully!', 'success');
                     }
+
+                    window._currentCamEditId = null;
+                    document.getElementById('courseAnnouncementModal')?.classList.remove('active');
                     window.renderCamList();
-                    if (window.currentSubjectId === subjectId && window.updateAnnouncementBanner) {
-                        window.updateAnnouncementBanner(document.querySelector('.page.active')?.id.replace('page-', '') || '', subjectId);
-                    }
+
+                    // Immediately update public ticker without page refresh
+                    const activePage = document.querySelector('.page.active')?.id.replace('page-', '') || '';
+                    window.updateAnnouncementBanner(activePage, window.currentSubjectId);
                 } catch (e) {
-                    window.showToast('Error saving: ' + e.message, 'err');
+                    console.error('Error saving announcement:', e);
+                    window.showToast('Error saving: ' + (e.message || e), 'err');
+                } finally {
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = window._currentCamEditId ? '<i class="fas fa-save"></i> Update Announcement' : '<i class="fas fa-bullhorn"></i> Activate Announcement';
+                    }
                 }
             };
 
-            window.deleteCam = async (id) => {
-                if (!confirm('Delete this announcement?')) return;
+            window.toggleCamActive = async (id, currentStatus, event) => {
+                if (event) event.stopPropagation();
+                if (!window.CURRENT_USER || window.CURRENT_USER.role !== 'admin') {
+                    return window.showToast('Unauthorized: Admin access required', 'err');
+                }
+
+                const newStatus = !currentStatus;
                 try {
+                    window.showToast(newStatus ? 'Activating announcement...' : 'Disabling announcement...');
+                    await window.fsUpdate('course_announcements', id, { isActive: newStatus });
+                    const item = window.COURSE_ANNOUNCEMENTS.find(x => x.id === id);
+                    if (item) {
+                        item.isActive = newStatus;
+                        item.isactive = newStatus;
+                    }
+                    window.renderCamList();
+                    const activePage = document.querySelector('.page.active')?.id.replace('page-', '') || '';
+                    window.updateAnnouncementBanner(activePage, window.currentSubjectId);
+                    window.showToast(newStatus ? '✓ Announcement activated' : '✓ Announcement disabled', 'success');
+                } catch (e) {
+                    console.error('Error toggling announcement:', e);
+                    window.showToast('Error updating status: ' + e.message, 'err');
+                }
+            };
+
+            window.deleteCam = async (id, event) => {
+                if (event) event.stopPropagation();
+                if (!window.CURRENT_USER || window.CURRENT_USER.role !== 'admin') {
+                    return window.showToast('Unauthorized: Admin access required', 'err');
+                }
+
+                if (!confirm('Are you sure you want to delete this announcement? This cannot be undone.')) return;
+                try {
+                    window.showToast('Deleting announcement...');
                     await window.fsDel('course_announcements', id);
                     window.COURSE_ANNOUNCEMENTS = window.COURSE_ANNOUNCEMENTS.filter(a => a.id !== id);
                     window.renderCamList();
-                    if (window.updateAnnouncementBanner) window.updateAnnouncementBanner(document.querySelector('.page.active')?.id.replace('page-', '') || '', window.currentSubjectId);
-                    window.showToast('Announcement deleted');
+                    const activePage = document.querySelector('.page.active')?.id.replace('page-', '') || '';
+                    window.updateAnnouncementBanner(activePage, window.currentSubjectId);
+                    window.showToast('✓ Announcement deleted', 'success');
                 } catch (e) {
+                    console.error('Error deleting announcement:', e);
                     window.showToast('Error deleting: ' + e.message, 'err');
                 }
             };
