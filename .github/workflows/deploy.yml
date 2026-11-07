@@ -33,7 +33,7 @@ jobs:
       - name: Deploy to Cloudflare Pages
         run: |
           set -o pipefail
-          npx wrangler pages deploy dist --project-name=makautstudyzone --account-id="$CLOUDFLARE_ACCOUNT_ID" --commit-dirty=true 2>&1 | tee wrangler_log.txt || {
+          npx wrangler pages deploy dist --project-name=makautstudyzone --commit-dirty=true 2>&1 | tee wrangler_log.txt || {
             cat wrangler_log.txt | while IFS= read -r line; do
               if [ -n "$line" ]; then
                 echo "::error title=Wrangler::$line"
