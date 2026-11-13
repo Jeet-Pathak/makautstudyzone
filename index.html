@@ -100,7 +100,7 @@
             return q;
         };
 
-        const camelKeys = ['createdAt', 'updatedAt', 'mockTestId', 'userId', 'semType', 'pdfLink', 'submittedAt', 'deviceId', 'dateRestricted', 'examYear', 'syllabusLink', 'notesLink', 'sectionSlug', 'musicURL', 'createdBy', 'subjectId', 'totalSessions', 'dailySessions', 'lastResetDate', 'passHash', 'adminOrder', 'isActive', 'isFinalNote', 'moduleId', 'lectureId', 'courseId', 'driveLink', 'statusId', 'expiresAt', 'likedAt', 'optionText', 'votedAt', 'lastViewedAt', 'musicUrl', 'videoDuration', 'telegramLink', 'displayOrder', 'ratingCount', 'subjectAdmins', 'assignedDonationId', 'oldPrice', 'newPrice', 'qrUrl', 'qrTitle', 'qrDesc', 'moduleName', 'videoType', 'videoId', 'ytLink', 'videoUrl', 'isPartition', 'imageUrl', 'startDate', 'endDate', 'passwordHash', 'usageCount', 'lastUsedAt', 'maxUses', 'maxUsers', 'updatedBy', 'grantedAt', 'pdfUrl', 'caType', 'collegeName', 'teacherName', 'yearSem', 'paperTitle', 'uploadedBy', 'uploaderId', 'uploadType', 'linkUrl', 'courseName'];
+        const camelKeys = ['createdAt', 'updatedAt', 'mockTestId', 'userId', 'semType', 'pdfLink', 'submittedAt', 'deviceId', 'dateRestricted', 'examYear', 'syllabusLink', 'notesLink', 'sectionSlug', 'musicURL', 'createdBy', 'subjectId', 'totalSessions', 'dailySessions', 'lastResetDate', 'passHash', 'adminOrder', 'isActive', 'isFinalNote', 'moduleId', 'lectureId', 'courseId', 'driveLink', 'statusId', 'expiresAt', 'likedAt', 'optionText', 'votedAt', 'lastViewedAt', 'musicUrl', 'videoDuration', 'telegramLink', 'displayOrder', 'ratingCount', 'subjectAdmins', 'assignedDonationId', 'oldPrice', 'newPrice', 'qrUrl', 'qrTitle', 'qrDesc', 'moduleName', 'videoType', 'videoId', 'ytLink', 'videoUrl', 'isPartition', 'imageUrl', 'startDate', 'endDate', 'passwordHash', 'usageCount', 'lastUsedAt', 'maxUses', 'maxUsers', 'updatedBy', 'grantedAt', 'pdfUrl', 'caType', 'collegeName', 'teacherName', 'yearSem', 'paperTitle', 'uploadedBy', 'uploaderId', 'uploadType', 'linkUrl', 'courseName', 'regDate', 'displayName', 'lastLogin', 'lastActive', 'lifetimeSecs', 'todaySecs', 'photoUrl', 'avatarUrl'];
         const mapToSb = (d, colName) => {
             if (!d) return d;
             const res = {};
@@ -125,7 +125,6 @@
                 const lower = k.toLowerCase();
                 if (res[lower] !== undefined) {
                     res[k] = res[lower];
-                    if (lower !== k) delete res[lower];
                 }
             });
             return res;
@@ -161,7 +160,7 @@
                 }
             }
             const docs = allData.map(d => ({ id: d.id, data: () => mapFromSb(d) }));
-            return { empty: docs.length === 0, docs, forEach: cb => docs.forEach(cb) };
+            return { empty: docs.length === 0, docs, forEach: cb => docs.forEach(cb), docChanges: () => docs.map(d => ({ type: 'added', sbDoc: d, doc: d })) };
         };
 
         window.sbAddDoc = async (ref, data) => {
@@ -2659,34 +2658,69 @@
             }
         };
         function refreshApDash() {
-            document.getElementById('statNotes').textContent = window.NOTES.length + window.ANSWERS.length;
-            document.getElementById('statPYQ').textContent = window.PYQS.length;
-            document.getElementById('statDoubts').textContent = window.DOUBTS.filter(d => !d.answer).length;
-            document.getElementById('statVideos').textContent = window.VIDEOS.length;
+            document.getElementById('statNotes').textContent = (window.NOTES || []).length + (window.ANSWERS || []).length;
+            document.getElementById('statPYQ').textContent = (window.PYQS || []).length;
+            document.getElementById('statDoubts').textContent = (window.DOUBTS || []).filter(d => !d.answer).length;
+            document.getElementById('statVideos').textContent = (window.VIDEOS || []).length;
+            renderAdminStats();
         }
         const formatSecs = (s) => { if (!s || s < 0) return '0m'; const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60); return h > 0 ? `${h}h ${m}m` : `${m}m`; };
         const isActive = (last) => last && (Date.now() - new Date(last).getTime()) < 300000;
         function renderAdminStats() {
-            const u = window.USERS_DB;
-            document.getElementById('statNotes').textContent = window.NOTES.length + window.ANSWERS.length;
-            document.getElementById('statPYQ').textContent = window.PYQS.length;
-            document.getElementById('statDoubts').textContent = u.filter(user => isActive(user.lastActive)).length;
-            document.getElementById('statVideos').textContent = window.VIDEOS.length;
+            const u = window.USERS_DB || [];
+            document.getElementById('statNotes').textContent = (window.NOTES || []).length + (window.ANSWERS || []).length;
+            document.getElementById('statPYQ').textContent = (window.PYQS || []).length;
+            document.getElementById('statDoubts').textContent = (window.DOUBTS || []).filter(d => !d.answer).length;
+            document.getElementById('statVideos').textContent = (window.VIDEOS || []).length;
             if (!document.getElementById('adminExtraStats')) {
                 const statsHTML = `<div id="adminExtraStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px">
 <div class="ap-kpi"><div class="ap-kpi-num" style="color:var(--warm)" id="admActiveToday">0</div><div class="ap-kpi-lbl">Active Today</div></div>
 <div class="ap-kpi"><div class="ap-kpi-num" style="color:var(--violet)" id="admTotalHours">0h</div><div class="ap-kpi-lbl">Total Usage Hrs</div></div>
 <div class="ap-kpi"><div class="ap-kpi-num" style="color:var(--acid)" id="admStreamCse">0</div><div class="ap-kpi-lbl">CSE Students</div></div>
-<div class="ap-kpi"><div class="ap-kpi-num" style="color:var(--electric)" id="admRecentReg">0</div><div class="ap-kpi-lbl">Registered (30d)</div></div>
+<div class="ap-kpi"><div class="ap-kpi-num" style="color:var(--electric)" id="admRecentReg">0</div><div class="ap-kpi-lbl" id="admRecentRegLbl">All Registered Users</div></div>
 </div>`;
                 document.querySelector('#ap-dashboard .ap-kpis').insertAdjacentHTML('afterend', statsHTML);
             }
             const now = new Date();
             const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(now.getDate() - 30);
-            document.getElementById('admActiveToday').textContent = u.filter(user => new Date(user.lastLogin) >= new Date(now.getFullYear(), now.getMonth(), now.getDate()) && user.status === 'active').length;
-            document.getElementById('admTotalHours').textContent = Math.floor(u.reduce((a, b) => a + (b.lifetimeSecs || 0), 0) / 3600) + 'h';
-            document.getElementById('admStreamCse').textContent = u.filter(x => x.stream === 'CSE').length;
-            document.getElementById('admRecentReg').textContent = u.filter(x => new Date(x.regDate) >= thirtyDaysAgo).length;
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const todayStr = now.toDateString();
+
+            const admActiveEl = document.getElementById('admActiveToday');
+            if (admActiveEl) {
+                const activeCount = u.filter(user => {
+                    if (user.status === 'blocked') return false;
+                    if (user.lastResetDate === todayStr || user.lastresetdate === todayStr) return true;
+                    const d = new Date(user.lastLogin || user.lastlogin || user.updatedAt || user.updatedat);
+                    return !isNaN(d.getTime()) && d >= todayStart;
+                }).length;
+                admActiveEl.textContent = activeCount;
+            }
+
+            const admHoursEl = document.getElementById('admTotalHours');
+            if (admHoursEl) {
+                const totalSecs = u.reduce((a, b) => a + (b.lifetimeSecs || b.lifetimesecs || ((b.totalSessions || b.totalsessions || 0) * 300) || 0), 0);
+                admHoursEl.textContent = Math.floor(totalSecs / 3600) + 'h';
+            }
+
+            const admCseEl = document.getElementById('admStreamCse');
+            if (admCseEl) admCseEl.textContent = u.filter(x => (x.stream || '').toUpperCase() === 'CSE').length;
+
+            const admRegEl = document.getElementById('admRecentReg');
+            const admRegLbl = document.getElementById('admRecentRegLbl');
+            if (admRegEl) {
+                const totalUsers = u.length;
+                const recentCount = u.filter(x => {
+                    const raw = x.regDate || x.regdate || x.createdAt || x.createdat;
+                    if (!raw) return false;
+                    const d = new Date(raw);
+                    return !isNaN(d.getTime()) && d >= thirtyDaysAgo;
+                }).length;
+                admRegEl.textContent = totalUsers.toLocaleString();
+                if (admRegLbl) {
+                    admRegLbl.innerHTML = `All Registered Users <span style="font-size:0.5rem;opacity:0.75;display:block;margin-top:2px;letter-spacing:1px">(+${recentCount} in 30d)</span>`;
+                }
+            }
         }
         window.renderAdminUsersTable = (search = '') => {
             const tbody = document.getElementById('apUsersTable');
@@ -4067,7 +4101,7 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
             };
 
             try {
-                const q = sbQuery(sbCollection(db, 'users'), sbOrderBy('regDate', 'desc'), sbLimit(5));
+                const q = sbQuery(sbCollection(db, 'users'), sbOrderBy('regdate', 'desc'), sbLimit(5));
                 sbOnSnapshot(q, (snapshot) => {
                     snapshot.docChanges().forEach((change) => {
                         if (change.type === 'added') {
@@ -5170,7 +5204,7 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
 
             window.initHeroStarBorder = () => {
                 const btn = document.getElementById('btnPremiumHero') || document.querySelector('.btn-premium');
-                if (!btn) return;
+                if (!btn || btn.classList.contains('liquid-btn-wrapper')) return;
                 if (btn.dataset.starBorderInit === 'true') return;
                 btn.dataset.starBorderInit = 'true';
 
@@ -9546,6 +9580,250 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     0 0 15px rgba(167, 139, 250, 0.3),
                     inset 0 1px 0 rgba(255, 255, 255, 0.7),
                     inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+            }
+        }
+
+        /* ================= LIQUID CAPSULE BUTTON (PREMIUM COURSES) ================= */
+        .liquid-btn-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            cursor: pointer;
+            vertical-align: middle;
+            outline: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            isolation: isolate;
+        }
+
+        .liquid-btn-glow {
+            position: absolute;
+            width: 114%;
+            height: 135%;
+            top: 6%;
+            left: 50%;
+            transform: translateX(-50%);
+            filter: blur(20px);
+            opacity: 0.75;
+            pointer-events: none;
+            border-radius: 9999px;
+            z-index: 0;
+        }
+
+        .liquid-btn-glow-sub {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            background: #8b5cf6;
+            filter: blur(8px);
+            opacity: 0.6;
+        }
+
+        .liquid-btn-shadow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -40%);
+            width: 94%;
+            height: 112%;
+            border-radius: 9999px;
+            background: #010128;
+            filter: blur(7.5px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .liquid-btn-surface {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 38px;
+            height: 56px;
+            border-radius: 9999px;
+            overflow: hidden;
+            border: 1.5px solid rgba(255, 255, 255, 0.45);
+            background: #000;
+            box-shadow: 0 6px 28px rgba(139, 92, 246, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+            transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.25s ease, filter 0.25s ease;
+            z-index: 2;
+        }
+
+        .liquid-btn-wrapper:hover .liquid-btn-surface {
+            transform: translateY(-2px) scale(1.03);
+            filter: brightness(1.15);
+            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.6), 0 0 25px rgba(168, 85, 247, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .liquid-btn-wrapper:active .liquid-btn-surface {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .liquid-btn-underlay-1 {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            background: #d9d9d9;
+            pointer-events: none;
+        }
+
+        .liquid-btn-underlay-2 {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            background: #000;
+            pointer-events: none;
+        }
+
+        .liquid-layer-container {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            border-radius: 9999px;
+            pointer-events: none;
+        }
+
+        .liquid-layer {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .liquid-layer svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .liquid-layer-0 {
+            width: 443px;
+            height: 121px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+
+        .liquid-layer-1 {
+            width: 443px;
+            height: 121px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(164.971deg);
+            mix-blend-mode: difference;
+        }
+
+        .liquid-layer-2 {
+            width: 443px;
+            height: 121px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-53%, -53%) rotate(-11.61deg);
+            mix-blend-mode: difference;
+        }
+
+        .liquid-layer-3 {
+            width: 756px;
+            height: 207px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -57%) rotate(-179.012deg);
+            mix-blend-mode: difference;
+        }
+
+        .liquid-layer-4 {
+            width: 756px;
+            height: 207px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-57%, -50%) rotate(-29.722deg);
+            mix-blend-mode: difference;
+        }
+
+        .liquid-layer-5 {
+            width: 756px;
+            height: 207px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-62%, -24%) rotate(160.227deg);
+            mix-blend-mode: difference;
+        }
+
+        .liquid-layer-6 {
+            width: 756px;
+            height: 207px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-67%, -29%) rotate(180deg);
+            mix-blend-mode: hard-light;
+        }
+
+        .liquid-border-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            border: 3px solid transparent;
+            border-image: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.75)) 1;
+            mix-blend-mode: overlay;
+            pointer-events: none;
+        }
+
+        .liquid-border-ring:nth-child(1) { filter: blur(3px); }
+        .liquid-border-ring:nth-child(2) { filter: blur(3px); }
+        .liquid-border-ring:nth-child(3) { filter: blur(5px); }
+        .liquid-border-ring:nth-child(4) { filter: blur(4px); }
+        .liquid-border-ring:nth-child(5) { filter: blur(4px); }
+
+        .liquid-blue-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -40%);
+            width: 70.8%;
+            height: 42.85%;
+            border-radius: 9999px;
+            filter: blur(15px);
+            background: #000066;
+            pointer-events: none;
+        }
+
+        .liquid-btn-content {
+            position: relative;
+            z-index: 10;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: #FFFFFF;
+            font-family: 'Unbounded', 'Inter', system-ui, sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .liquid-crown-icon {
+            font-size: 1.15rem;
+            color: #FFFFFF;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+        }
+
+        @media (max-width: 600px) {
+            .liquid-btn-wrapper {
+                width: 100%;
+            }
+            .liquid-btn-surface {
+                width: 100%;
+                height: 50px;
+                padding: 12px 20px;
+            }
+            .liquid-btn-content {
+                font-size: 0.8rem;
+                letter-spacing: 1.5px;
+                gap: 8px;
             }
         }
 
@@ -18187,8 +18465,124 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 <p>Engineering excellence through shared knowledge. Curated resources, organized brilliantly.</p>
             </div>
             <div class="hero-actions">
-                <a onclick="window.renderCourses(); window.nav('premium-courses')" class="btn-premium star-border" id="btnPremiumHero"><canvas class="star-border__light" aria-hidden="true"></canvas><span><i
-                            class="fas fa-crown"></i> Premium Courses</span></a>
+                <!-- Shared Animated Liquid Radial Gradient Definition -->
+                <svg style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;" aria-hidden="true">
+                    <defs>
+                        <radialGradient id="paint0_radial_liquid" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(287.5 280) rotate(-29.0546) scale(689.807 1000)">
+                            <animate attributeName="gradientTransform" dur="10s" repeatCount="indefinite"
+                                values="translate(287.5 280) rotate(-29.0546) scale(689.807 1000); translate(126.5 418.5) rotate(-64.756) scale(533.444 773.324); translate(264.5 339.5) rotate(-42.3022) scale(946.451 1372.05); translate(860.5 420) rotate(-153.984) scale(957.528 1388.11); translate(264.5 339.5) rotate(-42.3022) scale(946.451 1372.05); translate(126.5 418.5) rotate(-64.756) scale(533.444 773.324); translate(287.5 280) rotate(-29.0546) scale(689.807 1000);"
+                                keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            <stop offset="0" stop-color="#FFFFFF">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0; 0; 0; 0.109375; 0; 0; 0" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#FFFFFF; #FFFFFF; #FFFFFF; #0B06FC; #FFFFFF; #FFFFFF; #FFFFFF" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.188423" stop-color="#1E10C5">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.188423; 0.104167; 0.188423; 0.171875; 0.188423; 0.104167; 0.188423" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#1E10C5; #C5C1EA; #1E10C5; #1E10C5; #1E10C5; #C5C1EA; #1E10C5" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.260417" stop-color="#9089E2">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.260417; 0.182292; 0.307292; 0.260417; 0.307292; 0.182292; 0.260417" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#9089E2; #1403DE; #FFFFFF; #1403DE; #FFFFFF; #1403DE; #9089E2" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.328792" stop-color="#FCFCFE">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.328792; 0.28125; 0.328792; 0.328792; 0.328792; 0.28125; 0.328792" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#FCFCFE; #FFFFFF; #FCFCFE; #FCFCFE; #FCFCFE; #FFFFFF; #FCFCFE" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.328892" stop-color="#F9F9FD">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.328892; 0.328792; 0.328892; 0.328892; 0.328892; 0.328792; 0.328892" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#F9F9FD; #FCFCFE; #F9F9FD; #F9F9FD; #F9F9FD; #FCFCFE; #F9F9FD" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.328992" stop-color="#FFFFFF">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.328992; 0.328892; 0.442708; 0.328992; 0.442708; 0.328892; 0.328992" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#FFFFFF; #F9F9FD; #C1BEEB; #FFFFFF; #C1BEEB; #F9F9FD; #FFFFFF" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.442708" stop-color="#B2B8E7">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.442708; 0.453125; 0.537556; 0.442708; 0.537556; 0.453125; 0.442708" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#B2B8E7; #B2B8E7; #290ECB; #B2B8E7; #290ECB; #B2B8E7; #B2B8E7" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.537556" stop-color="#0E2DCB">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.537556; 0.515625; 0.631738; 0.515625; 0.631738; 0.515625; 0.537556" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#0E2DCB; #0E2DCB; #FFFFFF; #0E2DCB; #FFFFFF; #0E2DCB; #0E2DCB" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.631738" stop-color="#FFFFFF">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.631738; 0.631738; 0.725645; 0.631738; 0.725645; 0.631738; 0.631738" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#FFFFFF; #FFFFFF; #3F4CC0; #FFFFFF; #3F4CC0; #FFFFFF; #FFFFFF" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.725645" stop-color="#0017E9">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.725645; 0.692708; 0.817779; 0.692708; 0.817779; 0.692708; 0.725645" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#0017E9; #0017E9; #4743EF; #0017E9; #4743EF; #0017E9; #0017E9" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.817779" stop-color="#4743EF">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.817779; 0.75; 0.84375; 0.817708; 0.84375; 0.75; 0.817779" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#4743EF; #B6BAF6; #7D7BF4; #4743EF; #7D7BF4; #B6BAF6; #4743EF" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.84375" stop-color="#7D7BF4">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.84375; 0.817708; 0.90569; 0.869792; 0.90569; 0.817708; 0.84375" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#7D7BF4; #4743EF; #FFFFFF; #7D7BF4; #FFFFFF; #4743EF; #7D7BF4" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="0.90569" stop-color="#FFFFFF">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="0.90569; 0.869792; 1; 1; 1; 0.869792; 0.90569" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#FFFFFF; #7D7BF4; #0B06FC; #0B06FC; #0B06FC; #7D7BF4; #FFFFFF" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                            <stop offset="1" stop-color="#0B06FC">
+                                <animate attributeName="offset" dur="10s" repeatCount="indefinite" values="1; 1; 1; 1; 1; 1; 1" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                                <animate attributeName="stop-color" dur="10s" repeatCount="indefinite" values="#0B06FC; #FFFFFF; #0B06FC; #0B06FC; #0B06FC; #FFFFFF; #0B06FC" keyTimes="0; 0.166; 0.333; 0.5; 0.666; 0.833; 1" />
+                            </stop>
+                        </radialGradient>
+                    </defs>
+                </svg>
+
+                <a onclick="window.renderCourses(); window.nav('premium-courses')" class="liquid-btn-wrapper" id="btnPremiumHero" role="button" aria-label="Premium Courses">
+                    <!-- Ambient Outer Glow -->
+                    <div class="liquid-btn-glow" aria-hidden="true">
+                        <span class="liquid-btn-glow-sub"></span>
+                        <div class="liquid-layer-container">
+                            <div class="liquid-layer liquid-layer-0"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-1"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-2"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-3"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-4"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-5"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-6"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                        </div>
+                    </div>
+
+                    <!-- Dark Inner Shadow -->
+                    <div class="liquid-btn-shadow" aria-hidden="true"></div>
+
+                    <!-- Main Pill Surface -->
+                    <div class="liquid-btn-surface">
+                        <span class="liquid-btn-underlay-1" aria-hidden="true"></span>
+                        <span class="liquid-btn-underlay-2" aria-hidden="true"></span>
+
+                        <!-- 7 Liquid Blend Layers -->
+                        <div class="liquid-layer-container" aria-hidden="true">
+                            <div class="liquid-layer liquid-layer-0"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-1"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-2"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-3"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-4"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-5"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                            <div class="liquid-layer liquid-layer-6"><svg width="1030" height="280" viewBox="0 0 1030 280"><rect width="1030" height="280" rx="140" fill="url(#paint0_radial_liquid)" /></svg></div>
+                        </div>
+
+                        <!-- Overlay Border Rings -->
+                        <span class="liquid-border-ring" aria-hidden="true"></span>
+                        <span class="liquid-border-ring" aria-hidden="true"></span>
+                        <span class="liquid-border-ring" aria-hidden="true"></span>
+                        <span class="liquid-border-ring" aria-hidden="true"></span>
+                        <span class="liquid-border-ring" aria-hidden="true"></span>
+
+                        <!-- Deep Blue Center Glow -->
+                        <span class="liquid-blue-glow" aria-hidden="true"></span>
+
+                        <!-- Button Content -->
+                        <span class="liquid-btn-content">
+                            <i class="fas fa-crown liquid-crown-icon"></i>
+                            <span>PREMIUM COURSES</span>
+                        </span>
+                    </div>
+                </a>
                 <a onclick="nav('academic')" class="btn-acid"><span><i class="fas fa-database"></i>
                         &nbsp;Explore Notes</span></a>
             </div>
