@@ -759,9 +759,209 @@
             window.showToast('Please login to access materials', 'err');
             if (window.openAuth) window.openAuth('login');
         };
+        window.initAuthGlassWebGL = () => {
+            if (window._authGlassWebGLInit) return;
+            const canvas = document.getElementById('authGlassCanvas');
+            const element = document.querySelector('#authOverlay .auth-box');
+            const video = document.getElementById('authBgVideo');
+            if (!canvas || !element || !video) return;
+
+            const gl = canvas.getContext('webgl2', {
+                alpha: true,
+                premultipliedAlpha: true,
+                antialias: false,
+                depth: false,
+                stencil: false
+            });
+            if (!gl) return;
+
+            const vertSrc = `#version 300 es
+            in vec2 aPosition;
+            void main() {
+                gl_Position = vec4(aPosition, 0.0, 1.0);
+            }`;
+
+            const fragSrc = `#version 300 es
+            precision highp float;
+            uniform sampler2D uBackdrop;
+            uniform sampler2D uMap;
+            uniform vec2 uCanvas;
+            uniform vec2 uSize;
+            uniform vec2 uOrigin;
+            uniform vec2 uStep;
+            uniform vec3 uScale;
+            uniform ivec2 uChannel;
+            uniform float uSpread;
+            uniform float uLod;
+            uniform float uSaturation;
+            out vec4 outColor;
+
+            vec4 bend(vec2 p) {
+                vec4 map = texture(uMap, clamp(p / uSize, 0.0, 1.0));
+                vec2 shift = vec2(map[uChannel.x], map[uChannel.y]) - 0.5;
+                vec2 base = uOrigin + p * uStep;
+                vec4 red = textureLod(uBackdrop, base + shift * uScale.r * uStep, uLod);
+                vec4 green = textureLod(uBackdrop, base + shift * uScale.g * uStep, uLod);
+                vec4 blue = textureLod(uBackdrop, base + shift * uScale.b * uStep, uLod);
+                return vec4(red.r, green.g, blue.b, (red.a + green.a + blue.a) / 3.0);
+            }
+
+            void main() {
+                vec2 p = vec2(gl_FragCoord.x, uCanvas.y - gl_FragCoord.y) / uCanvas * uSize;
+                vec4 color = bend(p);
+                vec3 rgb = color.a > 0.0 ? color.rgb / color.a : vec3(0.0);
+                float s = uSaturation;
+                mat3 tone = mat3(
+                    0.213 + 0.787 * s, 0.213 - 0.213 * s, 0.213 - 0.213 * s,
+                    0.715 - 0.715 * s, 0.715 + 0.285 * s, 0.715 - 0.715 * s,
+                    0.072 - 0.072 * s, 0.072 - 0.072 * s, 0.072 + 0.928 * s
+                );
+                rgb = clamp(tone * rgb, 0.0, 1.0);
+                outColor = vec4(rgb * color.a, color.a);
+            }`;
+
+            const makeShader = (type, src) => {
+                const s = gl.createShader(type);
+                if (!s) return null;
+                gl.shaderSource(s, src);
+                gl.compileShader(s);
+                return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
+            };
+
+            const program = gl.createProgram();
+            const vs = makeShader(gl.VERTEX_SHADER, vertSrc);
+            const fs = makeShader(gl.FRAGMENT_SHADER, fragSrc);
+            if (!program || !vs || !fs) return;
+            gl.attachShader(program, vs);
+            gl.attachShader(program, fs);
+            gl.bindAttribLocation(program, 0, 'aPosition');
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+
+            const uniforms = {};
+            ['uBackdrop', 'uMap', 'uCanvas', 'uSize', 'uOrigin', 'uStep', 'uScale', 'uChannel', 'uSpread', 'uLod', 'uSaturation'].forEach(n => {
+                uniforms[n] = gl.getUniformLocation(program, n);
+            });
+
+            const vao = gl.createVertexArray();
+            const buf = gl.createBuffer();
+            gl.bindVertexArray(vao);
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+            const createTex = () => {
+                const t = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, t);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                return t;
+            };
+
+            const backdropTex = createTex();
+            const mapTex = createTex();
+            const mapCanvas = document.createElement('canvas');
+            const mapCtx = mapCanvas.getContext('2d');
+            let mapReady = false;
+
+            window._updateWebGLMap = () => {
+                const w = element.offsetWidth || 430;
+                const h = element.offsetHeight || 420;
+                const ratio = Math.min(2, window.devicePixelRatio || 1);
+                mapCanvas.width = Math.max(1, Math.round(w * ratio));
+                mapCanvas.height = Math.max(1, Math.round(h * ratio));
+
+                const edgeSize = Math.max(1, Math.min(w, h) * 0.035);
+                const svgStr = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg">' +
+                  '<defs>' +
+                    '<linearGradient id="rgW" x1="100%" y1="0%" x2="0%" y2="0%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="red"/></linearGradient>' +
+                    '<linearGradient id="bgW" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="blue"/></linearGradient>' +
+                    '<filter id="sfW" filterUnits="userSpaceOnUse" x="0" y="0" width="' + w + '" height="' + h + '" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="11"/></filter>' +
+                  '</defs>' +
+                  '<rect x="0" y="0" width="' + w + '" height="' + h + '" fill="black"/>' +
+                  '<rect x="0" y="0" width="' + w + '" height="' + h + '" rx="20" fill="url(#rgW)"/>' +
+                  '<rect x="0" y="0" width="' + w + '" height="' + h + '" rx="20" fill="url(#bgW)" style="mix-blend-mode:difference"/>' +
+                  '<rect x="' + edgeSize + '" y="' + edgeSize + '" width="' + Math.max(0, w - edgeSize * 2) + '" height="' + Math.max(0, h - edgeSize * 2) + '" rx="20" fill="hsl(0 0% 50% / 0.93)" filter="url(#sfW)"/>' +
+                '</svg>';
+
+                const img = new Image();
+                img.onload = () => {
+                    mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+                    mapCtx.drawImage(img, 0, 0, mapCanvas.width, mapCanvas.height);
+                    gl.bindTexture(gl.TEXTURE_2D, mapTex);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, mapCanvas);
+                    mapReady = true;
+                };
+                img.src = 'data:image/svg+xml,' + encodeURIComponent(svgStr);
+            };
+
+            window._updateWebGLMap();
+
+            let videoUploaded = false;
+            const tick = () => {
+                const overlay = document.getElementById('authOverlay');
+                if (overlay && overlay.style.display !== 'none' && mapReady) {
+                    if (video.readyState >= 2) {
+                        try {
+                            gl.bindTexture(gl.TEXTURE_2D, backdropTex);
+                            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                            videoUploaded = true;
+                        } catch (e) {}
+                    }
+
+                    if (videoUploaded) {
+                        const layoutWidth = element.offsetWidth || 430;
+                        const layoutHeight = element.offsetHeight || 420;
+                        const ratio = Math.min(2, window.devicePixelRatio || 1);
+                        const width = Math.max(1, Math.round(layoutWidth * ratio));
+                        const height = Math.max(1, Math.round(layoutHeight * ratio));
+
+                        if (canvas.width !== width || canvas.height !== height) {
+                            canvas.width = width;
+                            canvas.height = height;
+                        }
+
+                        const box = element.getBoundingClientRect();
+                        const vRect = video.getBoundingClientRect();
+                        const scaleX = box.width / layoutWidth;
+                        const scaleY = box.height / layoutHeight;
+
+                        gl.viewport(0, 0, width, height);
+                        gl.useProgram(program);
+                        gl.bindVertexArray(vao);
+                        gl.activeTexture(gl.TEXTURE0);
+                        gl.bindTexture(gl.TEXTURE_2D, backdropTex);
+                        gl.uniform1i(uniforms.uBackdrop, 0);
+                        gl.activeTexture(gl.TEXTURE1);
+                        gl.bindTexture(gl.TEXTURE_2D, mapTex);
+                        gl.uniform1i(uniforms.uMap, 1);
+                        gl.uniform2f(uniforms.uCanvas, width, height);
+                        gl.uniform2f(uniforms.uSize, layoutWidth, layoutHeight);
+                        gl.uniform2f(uniforms.uOrigin, (box.left - vRect.left) / (vRect.width || 1), (box.top - vRect.top) / (vRect.height || 1));
+                        gl.uniform2f(uniforms.uStep, scaleX / (vRect.width || 1), scaleY / (vRect.height || 1));
+                        gl.uniform3f(uniforms.uScale, -180.0, -170.0, -160.0);
+                        gl.uniform2i(uniforms.uChannel, 0, 1);
+                        gl.uniform1f(uniforms.uSpread, 0.0);
+                        gl.uniform1f(uniforms.uLod, 0.0);
+                        gl.uniform1f(uniforms.uSaturation, 1.0);
+                        gl.drawArrays(gl.TRIANGLES, 0, 3);
+                    }
+                }
+                requestAnimationFrame(tick);
+            };
+
+            requestAnimationFrame(tick);
+            window._authGlassWebGLInit = true;
+        };
+
         window.updateAuthGlassFilter = () => {
             const box = document.querySelector('#authOverlay .auth-box');
             const feImg = document.getElementById('authGlassFeImage');
+            if (window._updateWebGLMap) window._updateWebGLMap();
             if (!box || !feImg) return;
             const w = Math.round(box.offsetWidth || 430);
             const h = Math.round(box.offsetHeight || 420);
@@ -803,7 +1003,10 @@
             const overlay = document.getElementById('authOverlay');
             if (overlay) overlay.style.setProperty('display', 'flex', 'important');
             if (window.switchAuthTab) window.switchAuthTab(tab);
-            setTimeout(() => { if (window.updateAuthGlassFilter) window.updateAuthGlassFilter(); }, 30);
+            setTimeout(() => {
+                if (window.initAuthGlassWebGL) window.initAuthGlassWebGL();
+                if (window.updateAuthGlassFilter) window.updateAuthGlassFilter();
+            }, 30);
         };
         window.addEventListener('resize', () => {
             const overlay = document.getElementById('authOverlay');
@@ -14363,6 +14566,27 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
         }
 
+        .glass-surface__canvas,
+        .glass-surface__frame {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .glass-surface__frame {
+            background: rgba(10, 16, 20, 0.22);
+            box-shadow:
+                0 0 2px 1px rgba(255, 255, 255, 0.45) inset,
+                0 0 12px 3px rgba(255, 255, 255, 0.15) inset,
+                0px 4px 16px rgba(17, 17, 26, 0.1) inset,
+                0px 8px 24px rgba(17, 17, 26, 0.1) inset,
+                0px 16px 56px rgba(17, 17, 26, 0.1) inset;
+        }
+
         /* Auth Modal Specific Glass Surface */
         .auth-box {
             position: relative;
@@ -18623,11 +18847,14 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
     <div class="auth-overlay" id="authOverlay" style="display: none !important;" onclick="if(event.target === this) window.closeAuthModal()">
         <video autoplay muted loop playsinline preload="auto" disablePictureInPicture class="auth-bg-video"
             id="authBgVideo">
+            <source src="/auth-bg.mp4" type="video/mp4">
             <source
                 src="https://www.image2url.com/r2/default/videos/1786516631425-ddc5c67d-f507-441a-b32c-b005a9ee75c6.mp4"
                 type="video/mp4">
         </video>
         <div class="auth-box glass-surface glass-surface--fallback glass-surface--svg">
+            <canvas class="glass-surface__canvas" id="authGlassCanvas" aria-hidden="true"></canvas>
+            <span class="glass-surface__frame" aria-hidden="true"></span>
             <svg class="glass-surface__filter" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <defs>
                     <filter id="glass-filter-auth" color-interpolation-filters="sRGB" x="0%" y="0%" width="100%" height="100%">
