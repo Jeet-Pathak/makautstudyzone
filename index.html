@@ -4862,8 +4862,7 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
             if (page === 'premium-courses') window.renderCourses();
             if (page === 'home') {
                 if (window.initHeroStrokeText) window.initHeroStrokeText();
-            if (window.initHeroStarBorder) window.initHeroStarBorder();
-                if (window.initHeroStarBorder) window.initHeroStarBorder();
+                if (window.initHeroEyeTracking) window.initHeroEyeTracking();
             }
             if (page !== 'profile') window.checkAndShowMockTest();
         };
@@ -5718,6 +5717,166 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
                 measure();
             };
 
+            window.initHeroEyeTracking = () => {
+                const tracker = document.getElementById('heroEyeTracker');
+                if (!tracker) return;
+                if (tracker.dataset.init === 'true') return;
+                tracker.dataset.init = 'true';
+
+                const addFibers = (elemId) => {
+                    const wrap = document.getElementById(elemId);
+                    if (!wrap || wrap.children.length > 0) return;
+                    for (let i = 0; i < 24; i++) {
+                        const f = document.createElement('div');
+                        f.className = 'iris-fiber';
+                        f.style.transform = `rotate(${i * 15}deg)`;
+                        f.style.opacity = (0.28 + (i % 3) * 0.18).toString();
+                        wrap.appendChild(f);
+                    }
+                };
+
+                const addVeins = (elemId) => {
+                    const wrap = document.getElementById(elemId);
+                    if (!wrap || wrap.children.length > 0) return;
+                    for (let i = 0; i < 6; i++) {
+                        const v = document.createElement('div');
+                        v.className = 'eye-vein';
+                        v.style.height = (36 + (i % 3) * 8) + 'px';
+                        v.style.left = (18 + i * 13) + '%';
+                        v.style.top = (10 + (i % 3) * 15) + '%';
+                        v.style.transform = `rotate(${-35 + i * 18}deg)`;
+                        v.style.opacity = (0.35 + (i % 2) * 0.25).toString();
+                        wrap.appendChild(v);
+                    }
+                };
+
+                addFibers('heroFibersLeft');
+                addFibers('heroFibersRight');
+                addVeins('heroVeinsLeft');
+                addVeins('heroVeinsRight');
+
+                let mouseX = window.innerWidth / 2;
+                let mouseY = window.innerHeight / 2;
+                let lastMouseX = mouseX;
+                let lastMouseY = mouseY;
+
+                window.addEventListener('mousemove', (e) => {
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                }, { passive: true });
+
+                class EyeInstance {
+                    constructor(container, iris, pupil) {
+                        this.container = container;
+                        this.iris = iris;
+                        this.pupil = pupil;
+                        this.x = 0;
+                        this.y = 0;
+                        this.vx = 0;
+                        this.vy = 0;
+                        this.stiffness = 300;
+                        this.damping = 25;
+                        this.mass = 0.5;
+                        this.maxOffset = 21;
+                    }
+
+                    update(dt) {
+                        if (!this.container || !this.iris || !this.pupil) return;
+                        const rect = this.container.getBoundingClientRect();
+                        const cx = rect.left + rect.width / 2;
+                        const cy = rect.top + rect.height / 2;
+                        const dx = mouseX - cx;
+                        const dy = mouseY - cy;
+                        const dist = Math.hypot(dx, dy);
+                        const angle = Math.atan2(dy, dx);
+
+                        const clampedDist = Math.min(dist, this.maxOffset * 3);
+                        const normDist = clampedDist / (this.maxOffset * 3);
+                        const offset = normDist * this.maxOffset;
+
+                        const tx = Math.cos(angle) * offset;
+                        const ty = Math.sin(angle) * offset;
+
+                        const fx = -this.stiffness * (this.x - tx) - this.damping * this.vx;
+                        const fy = -this.stiffness * (this.y - ty) - this.damping * this.vy;
+                        this.vx += (fx / this.mass) * dt;
+                        this.vy += (fy / this.mass) * dt;
+                        this.x += this.vx * dt;
+                        this.y += this.vy * dt;
+
+                        const rot = (this.x / this.maxOffset) * 15;
+                        this.iris.style.transform = `translate(${this.x.toFixed(2)}px, ${this.y.toFixed(2)}px) rotate(${rot.toFixed(1)}deg)`;
+
+                        const scale = dist < 200 ? 1.3 - (dist / 200) * 0.3 : 0.85 + (Math.min(dist, 800) / 800) * 0.15;
+                        this.pupil.style.transform = `scale(${scale.toFixed(2)})`;
+                    }
+                }
+
+                const eyeLeft = new EyeInstance(
+                    document.getElementById('heroEyeLeft'),
+                    document.getElementById('heroIrisLeft'),
+                    document.getElementById('heroPupilLeft')
+                );
+                const eyeRight = new EyeInstance(
+                    document.getElementById('heroEyeRight'),
+                    document.getElementById('heroIrisRight'),
+                    document.getElementById('heroPupilRight')
+                );
+
+                let lastTime = performance.now();
+                const step = (now) => {
+                    const dt = Math.min((now - lastTime) / 1000, 0.05);
+                    lastTime = now;
+                    if (window.innerWidth > 1024) {
+                        eyeLeft.update(dt);
+                        eyeRight.update(dt);
+                    }
+                    requestAnimationFrame(step);
+                };
+                requestAnimationFrame(step);
+
+                const scheduleBlink = (eyeEl, baseDelay) => {
+                    setTimeout(() => {
+                        if (!eyeEl) return;
+                        eyeEl.classList.add('blinking');
+                        setTimeout(() => {
+                            eyeEl.classList.remove('blinking');
+                            scheduleBlink(eyeEl, 3200 + Math.random() * 2400);
+                        }, 150);
+                    }, baseDelay);
+                };
+                scheduleBlink(document.getElementById('heroEyeLeft'), 2200);
+                scheduleBlink(document.getElementById('heroEyeRight'), 2450);
+
+                setInterval(() => {
+                    if (Math.abs(mouseX - lastMouseX) < 2 && Math.abs(mouseY - lastMouseY) < 2) {
+                        const ox = (Math.random() - 0.5) * 40;
+                        const oy = (Math.random() - 0.5) * 28;
+                        mouseX += ox;
+                        mouseY += oy;
+                        setTimeout(() => {
+                            mouseX -= ox;
+                            mouseY -= oy;
+                        }, 450);
+                    }
+                    lastMouseX = mouseX;
+                    lastMouseY = mouseY;
+                }, 3000);
+
+                tracker.addEventListener('click', () => {
+                    const elLeft = document.getElementById('heroEyeLeft');
+                    const elRight = document.getElementById('heroEyeRight');
+                    if (elLeft) elLeft.classList.add('blinking');
+                    setTimeout(() => {
+                        if (elLeft) elLeft.classList.remove('blinking');
+                        if (elRight) elRight.classList.add('blinking');
+                        setTimeout(() => {
+                            if (elRight) elRight.classList.remove('blinking');
+                        }, 140);
+                    }, 140);
+                });
+            };
+
             window.initStatusSystem();
             document.getElementById('tabLogin').addEventListener('click', e => { e.preventDefault(); window.switchAuthTab('login'); });
             document.getElementById('tabRegister').addEventListener('click', e => { e.preventDefault(); window.switchAuthTab('register'); });
@@ -5738,6 +5897,7 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
             type();
             if (window.initHeroStrokeText) window.initHeroStrokeText();
             if (window.initHeroStarBorder) window.initHeroStarBorder();
+            if (window.initHeroEyeTracking) window.initHeroEyeTracking();
             window.loadAll().then(() => {
                 const loader = document.getElementById('globalLoader');
                 if (loader) {
@@ -9824,6 +9984,182 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 font-size: 0.8rem;
                 letter-spacing: 1.5px;
                 gap: 8px;
+            }
+        }
+
+        /* ================= HERO EYE TRACKING COMPONENT ================= */
+        .hero-eye-tracker {
+            position: absolute;
+            right: clamp(40px, 8vw, 160px);
+            top: 42%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(24px, 2.5vw, 40px);
+            padding: 20px;
+            z-index: 5;
+            pointer-events: auto;
+            user-select: none;
+            cursor: pointer;
+            animation: fadeInHeroEyes 1.2s cubic-bezier(0.16, 1, 0.3, 1) both 0.3s;
+        }
+
+        @keyframes fadeInHeroEyes {
+            from {
+                opacity: 0;
+                transform: translateY(-40%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(-50%) scale(1);
+            }
+        }
+
+        .eye-container {
+            position: relative;
+            width: 110px;
+            height: 93.5px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #F5F0EB 0%, #E8E2DA 60%, #D8D0C5 100%);
+            box-shadow:
+                inset 0 3px 10px rgba(0, 0, 0, 0.35),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.15),
+                0 14px 40px rgba(0, 0, 0, 0.7),
+                0 0 30px rgba(74, 103, 65, 0.18);
+            overflow: hidden;
+            transform-origin: center;
+            transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+
+        .eye-container.blinking {
+            transform: scaleY(0.04) !important;
+        }
+
+        /* Subtle blood vessels for realistic variant */
+        .eye-veins {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            opacity: 0.12;
+            pointer-events: none;
+        }
+
+        .eye-vein {
+            position: absolute;
+            background: #ef4444;
+            width: 1px;
+            pointer-events: none;
+        }
+
+        /* Iris */
+        .eye-iris {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            top: calc(50% - 25px);
+            left: calc(50% - 25px);
+            background: radial-gradient(circle at 40% 40%, #6B8F62, #4A6741 60%, #30472a 100%);
+            box-shadow:
+                inset 0 3px 8px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(0, 0, 0, 0.25),
+                0 0 12px rgba(74, 103, 65, 0.35);
+            will-change: transform;
+            pointer-events: none;
+        }
+
+        /* Iris fiber radial details */
+        .iris-fiber-wrap {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .iris-fiber {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 23px;
+            height: 1px;
+            transform-origin: left center;
+            background: linear-gradient(to right, transparent 15%, rgba(107, 143, 98, 0.6) 50%, transparent 85%);
+            pointer-events: none;
+        }
+
+        .iris-inner-ring {
+            position: absolute;
+            inset: 20%;
+            border-radius: 50%;
+            border: 1px solid rgba(74, 103, 65, 0.35);
+            pointer-events: none;
+        }
+
+        /* Pupil */
+        .eye-pupil {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            top: calc(50% - 12.5px);
+            left: calc(50% - 12.5px);
+            background: #08080a;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.85);
+            transition: transform 0.25s ease-out;
+            transform-origin: center;
+            pointer-events: none;
+        }
+
+        /* Light Glint Reflections */
+        .eye-reflection-1 {
+            position: absolute;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.6));
+            filter: blur(0.5px);
+            left: 14px;
+            top: 11px;
+            pointer-events: none;
+        }
+
+        .eye-reflection-2 {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.85);
+            left: 30px;
+            top: 29px;
+            pointer-events: none;
+        }
+
+        /* Eyelid Shadows */
+        .eye-shadow-top {
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 35%;
+            border-radius: 50% 50% 0 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.18) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .eye-shadow-bottom {
+            position: absolute;
+            inset: auto 0 0 0;
+            height: 22%;
+            border-radius: 0 0 50% 50%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.08) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        /* HIDDEN ON MOBILE / TABLET - ONLY VISIBLE IN DESKTOP */
+        @media (max-width: 1024px) {
+            .hero-eye-tracker {
+                display: none !important;
             }
         }
 
@@ -18450,6 +18786,37 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
 
     <section id="page-home" class="page active">
         <div class="hero">
+            <!-- Desktop Interactive Eye Tracking Component (Visible on Desktop Only) -->
+            <div class="hero-eye-tracker" id="heroEyeTracker" aria-hidden="true" title="GEN-ZINEERS Eye Tracker">
+                <!-- Left Eye -->
+                <div class="eye-container" id="heroEyeLeft">
+                    <div class="eye-veins" id="heroVeinsLeft"></div>
+                    <div class="eye-iris" id="heroIrisLeft">
+                        <div class="iris-fiber-wrap" id="heroFibersLeft"></div>
+                        <div class="iris-inner-ring"></div>
+                        <div class="eye-pupil" id="heroPupilLeft"></div>
+                        <div class="eye-reflection-1"></div>
+                        <div class="eye-reflection-2"></div>
+                    </div>
+                    <div class="eye-shadow-top"></div>
+                    <div class="eye-shadow-bottom"></div>
+                </div>
+
+                <!-- Right Eye -->
+                <div class="eye-container" id="heroEyeRight">
+                    <div class="eye-veins" id="heroVeinsRight"></div>
+                    <div class="eye-iris" id="heroIrisRight">
+                        <div class="iris-fiber-wrap" id="heroFibersRight"></div>
+                        <div class="iris-inner-ring"></div>
+                        <div class="eye-pupil" id="heroPupilRight"></div>
+                        <div class="eye-reflection-1"></div>
+                        <div class="eye-reflection-2"></div>
+                    </div>
+                    <div class="eye-shadow-top"></div>
+                    <div class="eye-shadow-bottom"></div>
+                </div>
+            </div>
+
             <div class="hero-tag">
                 <div class="hero-tag-line"></div>
                 <div class="hero-tag-dot"></div>System Online — Academic Resource Hub<div class="hero-tag-dot"></div>
