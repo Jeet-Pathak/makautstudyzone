@@ -2866,6 +2866,7 @@
             else if (sec === 'courseaccess') window.renderApCourseAccess();
             else if (sec === 'ca3') window.renderApCA3();
             else if (sec === 'pushnotifications') window.renderApPushNotifications();
+            else if (sec === 'jobtok') window.renderApJobTok();
         };
         window.renderApPushNotifications = async () => {
             const btn = document.getElementById('btnSendPush');
@@ -5071,6 +5072,7 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
             l.innerHTML = window.CUSTOM_SECTIONS.map(s => `<div style="background:var(--ink2);border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div style="font-family:'Unbounded';font-weight:700">${s.name} <span style="font-family:'JetBrains Mono';font-size:0.6rem;color:var(--muted)">(${s.slug})</span></div><div style="display:flex;gap:12px;align-items:center"><label style="font-size:0.65rem;cursor:pointer"><input type="checkbox" ${s.visible ? 'checked' : ''} onchange="toggleCustomVisible('${s.id}',this.checked)"> Show</label><button onclick="selectCustomSection('${s.slug}','${s.name}')" class="ap-btn cyan" style="padding:6px 14px;font-size:0.55rem">Manage</button><button onclick="deleteCustomSection('${s.id}')" class="ap-btn red" style="padding:6px 10px;font-size:0.55rem"><i class="fas fa-trash"></i></button></div></div>`).join('') || `<div style="color:var(--muted);text-align:center;padding:30px">No custom sections</div>`;
         };
         window.nav = (page, opts = {}) => {
+            if (page === 'jobtok') { if (window.openJobTok) window.openJobTok(); return; }
             if (page === 'team') page = 'home';
             if (!document.getElementById('page-' + page)) page = 'home';
             if (!opts.keepHash) {
@@ -6343,6 +6345,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         window.initFlowingMenu = () => {
             const items = [
                 { text: 'Home', target: 'home', img: 'https://picsum.photos/600/400?random=1' },
+                { text: 'JOBTOK REELS', target: 'jobtok', img: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&auto=format&fit=crop&q=80' },
                 { text: 'Courses', target: 'premium-courses', img: 'https://picsum.photos/600/400?random=10' },
                 { text: 'Academic', target: 'academic', img: 'https://picsum.photos/600/400?random=2' },
                 { text: 'PYQ', target: 'pyq', img: 'https://picsum.photos/600/400?random=3' },
@@ -18182,6 +18185,772 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 inset -2px -2px 5px rgba(255, 255, 255, 0.2) !important;
             transform: none;
         }
+
+        /* ========================================================= */
+        /* JOBTOK: Instagram Reels-Style Job Feed System            */
+        /* ========================================================= */
+        .jobtok-nav-pill {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(200, 255, 0, 0.14), rgba(77, 255, 219, 0.14)) !important;
+            border: 1px solid rgba(200, 255, 0, 0.45) !important;
+            color: var(--text) !important;
+            padding: 0 14px !important;
+            cursor: pointer;
+            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            position: relative;
+        }
+
+        .jobtok-nav-pill:hover {
+            border-color: var(--acid) !important;
+            box-shadow: 0 0 16px rgba(200, 255, 0, 0.35) !important;
+            transform: translateY(-1px);
+        }
+
+        .jobtok-nav-badge {
+            font-size: 0.52rem;
+            font-family: 'Unbounded', sans-serif;
+            font-weight: 800;
+            background: var(--acid);
+            color: #000;
+            padding: 2px 5px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            line-height: 1;
+            margin-left: 2px;
+            animation: pulseJobtokBadge 2s infinite;
+        }
+
+        @keyframes pulseJobtokBadge {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.08); opacity: 0.85; }
+        }
+
+        /* Overlay */
+        .jobtok-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: #000000;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Top Bar */
+        .jobtok-topbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            padding: env(safe-area-inset-top, 0px) 16px 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: none;
+        }
+
+        .jobtok-top-btn {
+            pointer-events: auto;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .jobtok-top-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.06);
+        }
+
+        .jobtok-tabs {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 4px 6px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .jobtok-tab {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.65);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .jobtok-tab:hover {
+            color: #ffffff;
+        }
+
+        .jobtok-tab.active {
+            color: #000000;
+            background: var(--acid);
+            box-shadow: 0 0 12px rgba(200, 255, 0, 0.45);
+        }
+
+        /* Feed container */
+        .jobtok-feed-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: #050508;
+        }
+
+        .jobtok-feed {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            position: relative;
+            outline: none;
+        }
+
+        .jobtok-feed::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Post Card */
+        .jobtok-card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0b10;
+        }
+
+        /* Ambient blurred background */
+        .jobtok-bg-blur {
+            position: absolute;
+            inset: -20px;
+            width: calc(100% + 40px);
+            height: calc(100% + 40px);
+            object-fit: cover;
+            filter: blur(40px) brightness(0.35);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Main Image */
+        .jobtok-main-img {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: auto;
+        }
+
+        /* Text-Only Card Container */
+        .jobtok-text-card {
+            position: relative;
+            z-index: 2;
+            width: 90%;
+            max-width: 390px;
+            padding: 34px 24px;
+            background: rgba(18, 22, 32, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 24px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            box-shadow:
+                0 0 2px 1px rgba(255, 255, 255, 0.3) inset,
+                0 25px 60px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .jobtok-text-card-kicker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 2.5px;
+            color: var(--acid);
+            text-transform: uppercase;
+        }
+
+        .jobtok-text-card-body {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: #f1f5f9;
+            font-weight: 500;
+            max-height: 50vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        /* Gradient bottom vignette */
+        .jobtok-vignette {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0.92) 100%);
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* Right toolbar */
+        .jobtok-toolbar {
+            position: absolute;
+            right: 14px;
+            bottom: 96px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .jobtok-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .jobtok-btn-round {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(18, 20, 26, 0.55);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .jobtok-btn-round:active {
+            transform: scale(0.88);
+        }
+
+        .jobtok-btn-round.liked {
+            color: #ff2d55;
+            background: rgba(255, 45, 85, 0.18);
+            border-color: rgba(255, 45, 85, 0.4);
+            animation: heartPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes heartPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.35); }
+            100% { transform: scale(1); }
+        }
+
+        .jobtok-btn-round.saved {
+            color: var(--acid);
+            background: rgba(200, 255, 0, 0.18);
+            border-color: rgba(200, 255, 0, 0.4);
+        }
+
+        .jobtok-action-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            letter-spacing: 0.5px;
+        }
+
+        /* Bottom Details & Apply button */
+        .jobtok-bottom {
+            position: absolute;
+            left: 16px;
+            right: 80px;
+            bottom: 24px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .jobtok-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .jobtok-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--acid);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.75rem;
+            box-shadow: 0 0 10px rgba(200, 255, 0, 0.4);
+        }
+
+        .jobtok-author-text {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .jobtok-time {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 400;
+        }
+
+        .jobtok-caption-box {
+            pointer-events: auto;
+            position: relative;
+        }
+
+        .jobtok-caption-text {
+            font-size: 0.86rem;
+            line-height: 1.45;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .jobtok-caption-text.clamped {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .jobtok-more-link {
+            background: none;
+            border: none;
+            color: var(--acid);
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* APPLY HERE Button */
+        .jobtok-apply-btn {
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: fit-content;
+            max-width: 100%;
+            padding: 12px 26px;
+            background: linear-gradient(90deg, #c4ff00 0%, #46e897 100%);
+            color: #000000 !important;
+            font-family: 'Unbounded', sans-serif;
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-decoration: none !important;
+            border-radius: 30px;
+            box-shadow: 0 6px 20px rgba(196, 255, 0, 0.4);
+            transition: all 0.25s ease;
+            margin-top: 4px;
+            animation: applyGlow 2.5s infinite;
+        }
+
+        .jobtok-apply-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(196, 255, 0, 0.6);
+            filter: brightness(1.08);
+        }
+
+        .jobtok-apply-btn:active {
+            transform: translateY(0);
+        }
+
+        @keyframes applyGlow {
+            0%, 100% { box-shadow: 0 6px 20px rgba(196, 255, 0, 0.35); }
+            50% { box-shadow: 0 8px 30px rgba(70, 232, 151, 0.6); }
+        }
+
+        /* Double-tap heart burst */
+        .jobtok-heart-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 5rem;
+            color: #ff2d55;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .jobtok-heart-burst.animate {
+            animation: heartBurstAnim 0.75s ease-out forwards;
+        }
+
+        @keyframes heartBurstAnim {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            40% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.95; }
+            70% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+            100% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; }
+        }
+
+        /* Comments Bottom Sheet */
+        .jobtok-sheet-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .jobtok-sheet-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .jobtok-comments-sheet {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 65vh;
+            max-height: 560px;
+            background: rgba(12, 15, 22, 0.97);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.14);
+            z-index: 160;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .jobtok-comments-sheet.active {
+            transform: translateY(0);
+        }
+
+        .jobtok-sheet-handle {
+            width: 40px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            margin: 12px auto 6px auto;
+            cursor: pointer;
+        }
+
+        .jobtok-sheet-header {
+            padding: 8px 20px 14px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .jobtok-sheet-header h3 {
+            font-size: 0.88rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #f1f5f9;
+            text-transform: uppercase;
+        }
+
+        .jobtok-sheet-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .jobtok-sheet-close:hover {
+            color: #fff;
+        }
+
+        .jobtok-comments-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scrollbar-width: thin;
+        }
+
+        .jobtok-comment-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .jobtok-comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--acid);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .jobtok-comment-content {
+            flex: 1;
+        }
+
+        .jobtok-comment-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 3px;
+        }
+
+        .jobtok-comment-author {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .jobtok-comment-time {
+            font-size: 0.62rem;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .jobtok-comment-del {
+            background: none;
+            border: none;
+            color: #ff4757;
+            font-size: 0.72rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            margin-left: auto;
+            opacity: 0.7;
+        }
+
+        .jobtok-comment-del:hover {
+            opacity: 1;
+        }
+
+        .jobtok-comment-body {
+            font-size: 0.82rem;
+            line-height: 1.4;
+            color: #cbd5e1;
+            word-break: break-word;
+        }
+
+        .jobtok-comment-form {
+            padding: 12px 16px env(safe-area-inset-bottom, 12px) 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: rgba(8, 10, 16, 0.95);
+        }
+
+        .jobtok-comment-input {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            font-size: 0.82rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .jobtok-comment-input:focus {
+            border-color: var(--acid);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .jobtok-comment-submit {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--acid);
+            border: none;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .jobtok-comment-submit:active {
+            transform: scale(0.9);
+        }
+
+        /* Empty state */
+        .jobtok-empty {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--muted);
+            gap: 16px;
+        }
+
+        .jobtok-empty-icon {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.2);
+            margin-bottom: 8px;
+        }
+
+        .jobtok-empty h3 {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.1rem;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        .jobtok-empty p {
+            font-size: 0.82rem;
+            line-height: 1.5;
+            max-width: 300px;
+        }
+
+        /* Admin Manage JOBTOK Cards */
+        .jobtok-ap-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            transition: all 0.25s ease;
+        }
+
+        .jobtok-ap-card:hover {
+            border-color: rgba(200, 255, 0, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .jobtok-ap-thumb {
+            width: 72px;
+            height: 72px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .jobtok-ap-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .jobtok-ap-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .jobtok-ap-info h4 {
+            font-size: 0.84rem;
+            color: var(--text);
+            margin-bottom: 6px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .jobtok-ap-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 0.65rem;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .jobtok-ap-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
     </style>
     <script>
         window.toggleLightMode = () => {
@@ -19132,6 +19901,47 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 onclick="window.nextStatus()" aria-label="Next status"><i class="fas fa-chevron-right"></i></button>
         </div>
     </div>
+
+    <!-- JOBTOK REELS VIEWER MODAL -->
+    <div class="jobtok-overlay" id="jobtokViewer" style="display:none;" aria-hidden="true">
+        <!-- Top Navigation Bar -->
+        <div class="jobtok-topbar">
+            <button class="jobtok-top-btn" id="jobtokCloseBtn" onclick="window.closeJobTok()" aria-label="Close JOBTOK" title="Close (Esc)">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="jobtok-tabs">
+                <button class="jobtok-tab active" id="jobtokTabForYou" onclick="window.switchJobTokTab('foryou')">For You</button>
+                <button class="jobtok-tab" id="jobtokTabSaved" onclick="window.switchJobTokTab('saved')">Saved</button>
+            </div>
+            <div style="width:40px;display:flex;justify-content:flex-end;">
+                <span class="jobtok-nav-badge" style="font-size:0.6rem;padding:3px 7px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border-radius:999px;font-weight:700;letter-spacing:1px;color:#fff;">JOBTOK</span>
+            </div>
+        </div>
+
+        <!-- Vertical Reels Feed Container -->
+        <div class="jobtok-feed-container">
+            <div class="jobtok-feed" id="jobtokFeed" tabindex="0" aria-label="Job posts feed">
+                <!-- Posts dynamically rendered here -->
+            </div>
+        </div>
+
+        <!-- Comments Slide-Up Bottom Sheet -->
+        <div class="jobtok-sheet-backdrop" id="jobtokCommentsBackdrop" onclick="window.closeJobTokComments()"></div>
+        <div class="jobtok-comments-sheet" id="jobtokCommentsSheet" role="dialog" aria-modal="true" aria-labelledby="jobtokCommentsTitle">
+            <div class="jobtok-sheet-handle"></div>
+            <div class="jobtok-sheet-header">
+                <h3 id="jobtokCommentsTitle"><i class="far fa-comment-dots" style="color:var(--acid);margin-right:8px;"></i>Comments (<span id="jobtokCommentsCount">0</span>)</h3>
+                <button class="jobtok-sheet-close" onclick="window.closeJobTokComments()" aria-label="Close comments"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="jobtok-comments-list" id="jobtokCommentsList">
+                <!-- Comments dynamically rendered here -->
+            </div>
+            <form class="jobtok-comment-form" id="jobtokCommentForm" onsubmit="window.submitJobTokComment(event)">
+                <input type="text" class="jobtok-comment-input" id="jobtokCommentInput" placeholder="Add a comment or inquiry..." maxlength="300" autocomplete="off" required>
+                <button type="submit" class="jobtok-comment-submit" id="jobtokCommentSubmit" aria-label="Send comment"><i class="fas fa-paper-plane"></i></button>
+            </form>
+        </div>
+    </div>
     <div class="mob-menu menu-wrap" id="mobMenu">
         <nav class="menu" id="flowingMenuContainer"></nav>
     </div>
@@ -19146,6 +19956,8 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     <span class="sm-brand">GEN-ZINEERS FOR MAKAUTIANS</span>
                 </div>
                 <nav class="sm-nav">
+                    <a class="sm-link" onclick="window.openJobTok(); window.closeDesktopMenu();"><span
+                            class="sm-link-text" style="display:flex;align-items:center;gap:8px;"><i class="fas fa-play" style="color:var(--acid);font-size:0.75rem;"></i> JOBTOK <span class="jobtok-nav-badge" style="font-size:0.55rem;background:var(--acid);color:#000;padding:2px 6px;border-radius:999px;font-weight:800;letter-spacing:1px;">REELS</span></span></a>
                     <a class="sm-link" onclick="window.nav('home'); window.closeDesktopMenu();"><span
                             class="sm-link-text">Home</span></a>
                     <a class="sm-link" onclick="window.nav('premium-courses'); window.closeDesktopMenu();"><span
@@ -19200,7 +20012,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 style="padding: 0 14px; margin-right: 8px;"><i class="fas fa-sun" id="modeToggleIcon"></i></button>
             <button class="nav-pill perf-toggle" id="perfToggleBtn" type="button"
                 onclick="window.togglePerformanceMode()" title="Toggle Performance Mode (Battery Saver)"><i
-                    class="fas fa-bolt" id="perfToggleIcon"></i></button><button class="nav-pill" id="statusButton"
+                    class="fas fa-bolt" id="perfToggleIcon"></i></button><button class="nav-pill jobtok-nav-pill" id="navJobTokBtn" type="button" onclick="window.openJobTok()" title="Explore JOBTOK Reels"><i class="fas fa-play" style="color:var(--acid);font-size:0.75rem;"></i> <span>JOBTOK</span><span class="jobtok-nav-badge">REELS</span></button><button class="nav-pill" id="statusButton"
                 type="button" onclick="window.openStatusViewer()" aria-label="No active statuses"><span
                     class="pulse-dot"></span><span class="status-pill-label">Online</span></button>
             <div class="hamburger mobile-only" id="hamburger" onclick="toggleMenu()">
@@ -22251,6 +23063,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                         <div class="ap-nav-item active" onclick="apNav('dashboard')"><i
                                 class="fas fa-tachometer-alt"></i> Dashboard
                         </div>
+                        <div class="ap-nav-item" onclick="apNav('jobtok')"><i class="fas fa-play-circle" style="color:var(--acid);"></i> Manage JOBTOK</div>
                         <div class="ap-nav-item" onclick="apNav('subjects')"><i class="fas fa-book"></i> Subjects</div>
                         <div class="ap-nav-item" onclick="apNav('courses')"><i class="fas fa-graduation-cap"></i>
                             Courses</div>
@@ -22298,6 +23111,77 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     </div>
                 </div>
                 <div class="ap-main">
+                    <!-- JOBTOK ADMIN MANAGEMENT SECTION -->
+                    <div class="ap-sec" id="ap-jobtok">
+                        <div class="ap-hdr">
+                            <h2><i class="fas fa-play-circle" style="color:var(--acid);margin-right:10px;"></i>Manage JOBTOK</h2>
+                            <p>Instagram Reels-style job feed: post job opportunities, recruitment updates, announcements, and track engagement.</p>
+                        </div>
+
+                        <!-- Post Composer Card -->
+                        <div class="ap-card" style="margin-top:20px;">
+                            <h3 id="jobtokComposerTitle" style="display:flex;align-items:center;gap:8px;font-size:1.1rem;margin-bottom:16px;">
+                                <i class="fas fa-plus-circle" style="color:var(--acid);"></i> Create / Edit JOBTOK Post
+                            </h3>
+                            <input type="hidden" id="jobtokEditId">
+                            
+                            <div style="display:flex;flex-direction:column;gap:16px;">
+                                <div>
+                                    <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                        Caption / Job Description <span style="color:var(--muted);font-weight:400;text-transform:none;">(Markdown & emojis supported)</span>
+                                    </label>
+                                    <textarea class="ap-input" id="jobtokCaptionInput" rows="4" placeholder="e.g. 🚀 Urgent Hiring: Full Stack Developer (React / Node.js) at TechCorp! CTC: 8-12 LPA. Freshers welcome..."></textarea>
+                                </div>
+
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
+                                    <div>
+                                        <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                            Image Link <span style="color:var(--muted);font-weight:400;text-transform:none;">(Optional URL)</span>
+                                        </label>
+                                        <input type="url" class="ap-input" id="jobtokImageInput" placeholder="https://example.com/job-poster.jpg" oninput="window.previewJobTokImage(this.value)">
+                                        <div id="jobtokImagePreviewBox" style="display:none;margin-top:10px;border-radius:10px;overflow:hidden;border:1px solid var(--border);max-height:160px;position:relative;background:#000;">
+                                            <img id="jobtokImagePreview" src="" alt="Preview" style="width:100%;height:160px;object-fit:cover;">
+                                            <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.7);padding:2px 8px;border-radius:4px;font-size:0.65rem;color:#fff;">Preview</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                            Apply Link <span style="color:var(--muted);font-weight:400;text-transform:none;">(Optional external URL)</span>
+                                        </label>
+                                        <input type="url" class="ap-input" id="jobtokApplyInput" placeholder="https://forms.gle/... or https://company.com/apply">
+                                        <p style="font-size:0.7rem;color:var(--muted);margin-top:4px;">
+                                            <i class="fas fa-info-circle"></i> If left empty, the "APPLY HERE" button will NOT be displayed.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:10px;border-top:1px solid var(--border);">
+                                    <label style="display:inline-flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;">
+                                        <input type="checkbox" id="jobtokActiveCheck" checked style="accent-color:var(--acid);width:18px;height:18px;">
+                                        <span>Publish immediately (Active in feed)</span>
+                                    </label>
+                                    <div style="display:flex;gap:10px;">
+                                        <button class="ap-btn red" type="button" onclick="window.resetJobTokForm()" id="jobtokCancelBtn" style="display:none;">Cancel</button>
+                                        <button class="ap-btn warm" type="button" onclick="window.saveJobTokPost()" id="jobtokSubmitBtn">
+                                            <i class="fas fa-paper-plane"></i> Publish Post
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Published Posts Management List -->
+                        <div class="ap-card" style="margin-top:20px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                                <h3 style="font-size:1.1rem;margin:0;"><i class="fas fa-list-ul" style="color:var(--cyan);margin-right:8px;"></i>Published Posts (<span id="jobtokApCount">0</span>)</h3>
+                                <button class="ap-btn cyan" type="button" onclick="window.renderApJobTok()" style="padding:6px 14px;font-size:0.75rem;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            </div>
+                            <div id="jobtokAdminList" style="display:flex;flex-direction:column;gap:12px;">
+                                <!-- Admin post items rendered here -->
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="ap-sec" id="ap-pushnotifications">
                         <div class="ap-hdr">
                             <h2>Push Notifications</h2>
@@ -23900,6 +24784,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
             window.loadAll = async () => {
                 await _origLoadAll?.();
                 try {
+                    if (window.loadJobTokPosts) window.loadJobTokPosts();
                     window.CA3_PAPERS = await window.fsLoadCol('ca3_papers');
                     if (document.getElementById('page-ca3')?.classList.contains('active')) {
                         window.renderCA3Papers();
@@ -23915,6 +24800,10 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
             // 🔹 Navigation Integration
             const _origNav = window.nav;
             window.nav = (page) => {
+                if (page === 'jobtok') {
+                    if (window.openJobTok) window.openJobTok();
+                    return;
+                }
                 _origNav?.(page);
                 if (page === 'ca3') {
                     window.renderCA3Papers();
@@ -23932,6 +24821,8 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 _origApNav?.(sec);
                 if (sec === 'ca3') {
                     window.renderApCA3();
+                } else if (sec === 'jobtok') {
+                    if (window.renderApJobTok) window.renderApJobTok();
                 }
             };
 
@@ -26996,6 +27887,15 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                                     if (window.closeStatusViewer) { window.closeStatusViewer(); return; }
                                 }
 
+                                const jobtokComments = document.getElementById('jobtokCommentsSheet');
+                                if (jobtokComments && jobtokComments.classList.contains('active')) {
+                                    if (window.closeJobTokComments) { window.closeJobTokComments(); return; }
+                                }
+                                const jobtokViewer = document.getElementById('jobtokViewer');
+                                if (jobtokViewer && jobtokViewer.style.display !== 'none' && jobtokViewer.style.display !== '') {
+                                    if (window.closeJobTok) { window.closeJobTok(); return; }
+                                }
+
                                 const camModal = document.getElementById('courseAnnouncementModal');
                                 if (camModal && (camModal.style.display === 'flex' || camModal.style.display === 'block')) {
                                     if (window.closeCamEditor) { window.closeCamEditor(); return; }
@@ -27057,6 +27957,877 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                     console.warn('Capacitor bridge notice:', err);
                 }
             })();
+        </script>
+
+        <!-- JOBTOK INSTAGRAM REELS-STYLE JOB FEED SYSTEM -->
+        <script id="jobtokScript">
+        (function() {
+            // 1. State & Local Device Persistence
+            window.JOBTOK_POSTS = [];
+            try {
+                window.JOBTOK_SAVED = JSON.parse(localStorage.getItem('jobtok_saved_posts') || '[]');
+                if (!Array.isArray(window.JOBTOK_SAVED)) window.JOBTOK_SAVED = [];
+            } catch (e) {
+                window.JOBTOK_SAVED = [];
+            }
+            window.JOBTOK_CURRENT_TAB = 'foryou';
+            window.JOBTOK_ACTIVE_COMMENT_POST_ID = null;
+
+            // 2. Identity Helpers
+            window.getJobTokDeviceId = function() {
+                if (window.CURRENT_USER && window.CURRENT_USER.uid) {
+                    return 'usr_' + window.CURRENT_USER.uid;
+                }
+                let did = localStorage.getItem('jobtok_device_id');
+                if (!did) {
+                    did = 'dev_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+                    localStorage.setItem('jobtok_device_id', did);
+                }
+                return did;
+            };
+
+            window.getJobTokUserName = function() {
+                if (window.CURRENT_USER) {
+                    return window.CURRENT_USER.displayName || window.CURRENT_USER.name || window.CURRENT_USER.email?.split('@')[0] || 'Member';
+                }
+                const did = window.getJobTokDeviceId();
+                return 'Student ' + did.slice(-4).toUpperCase();
+            };
+
+            function formatJobTokTime(ts) {
+                if (!ts) return 'Recently';
+                const now = Date.now();
+                const diff = Math.max(0, Math.floor((now - Number(ts)) / 1000));
+                if (diff < 60) return 'Just now';
+                if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+                if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+                if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+                return new Date(Number(ts)).toLocaleDateString();
+            }
+
+            function escapeJobTokHtml(str) {
+                if (!str) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function isValidHttpUrl(string) {
+                if (!string || typeof string !== 'string') return false;
+                try {
+                    const url = new URL(string.trim());
+                    return url.protocol === 'http:' || url.protocol === 'https:';
+                } catch (_) {
+                    return false;
+                }
+            }
+
+            // 3. Supabase Data Loader
+            window.loadJobTokPosts = async function() {
+                try {
+                    if (!window.supabase) return;
+                    const { data, error } = await window.supabase
+                        .from('settings')
+                        .select('*')
+                        .eq('type', 'jobtok')
+                        .order('id', { ascending: false });
+                    if (error) {
+                        console.warn('[JOBTOK] Error fetching posts:', error);
+                        return;
+                    }
+                    if (Array.isArray(data)) {
+                        window.JOBTOK_POSTS = data.map(row => {
+                            let parsed = {};
+                            try {
+                                parsed = typeof row.body === 'string' ? JSON.parse(row.body) : (row.body || {});
+                            } catch(e) { parsed = {}; }
+                            return {
+                                id: row.id,
+                                active: row.active !== false,
+                                caption: (parsed.caption || row.title || '').trim(),
+                                image: (parsed.image || row.img || '').trim(),
+                                applyLink: (parsed.applyLink || row.link || '').trim(),
+                                likes: Array.isArray(parsed.likes) ? parsed.likes : [],
+                                comments: Array.isArray(parsed.comments) ? parsed.comments : [],
+                                createdAt: parsed.createdAt || Date.now(),
+                                updatedAt: parsed.updatedAt || Date.now()
+                            };
+                        });
+
+                        const viewer = document.getElementById('jobtokViewer');
+                        if (viewer && viewer.style.display !== 'none') {
+                            window.renderJobTokFeed();
+                        }
+                        const apJobtok = document.getElementById('ap-jobtok');
+                        if (apJobtok && apJobtok.classList.contains('active')) {
+                            window.renderApJobTok();
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[JOBTOK] Load exception:', e);
+                }
+            };
+
+            // 4. Feed Rendering with Strict Conditional Logic
+            window.renderJobTokFeed = function() {
+                const feed = document.getElementById('jobtokFeed');
+                if (!feed) return;
+
+                let posts = window.JOBTOK_POSTS.filter(p => p.active !== false);
+
+                if (window.JOBTOK_CURRENT_TAB === 'saved') {
+                    posts = posts.filter(p => window.JOBTOK_SAVED.includes(p.id));
+                    if (posts.length === 0) {
+                        feed.innerHTML = `
+                            <div class="jobtok-card" style="display:flex;align-items:center;justify-content:center;background:#0d1117;">
+                                <div class="jobtok-empty">
+                                    <div class="jobtok-empty-icon"><i class="far fa-bookmark"></i></div>
+                                    <h3>No Saved Job Posts</h3>
+                                    <p>Tap the bookmark icon on any job opportunity in "For You" to save it here on this device.</p>
+                                    <button class="jobtok-apply-btn" style="margin-top:20px;max-width:240px;justify-content:center;" onclick="window.switchJobTokTab('foryou')">
+                                        <span>Browse For You</span>
+                                        <i class="fas fa-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                }
+
+                if (posts.length === 0) {
+                    feed.innerHTML = `
+                        <div class="jobtok-card" style="display:flex;align-items:center;justify-content:center;background:#0d1117;">
+                            <div class="jobtok-empty">
+                                <div class="jobtok-empty-icon"><i class="fas fa-briefcase"></i></div>
+                                <h3>No Job Opportunities Yet</h3>
+                                <p>New recruitment alerts and career posts will appear here shortly. Stay tuned!</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const did = window.getJobTokDeviceId();
+                feed.innerHTML = posts.map(post => {
+                    const rawCaption = (post.caption || '').trim();
+                    const hasCaption = rawCaption.length > 0;
+                    const rawImage = (post.image || '').trim();
+                    const hasImage = rawImage.length > 0 && (rawImage.startsWith('http://') || rawImage.startsWith('https://') || rawImage.startsWith('data:'));
+                    const rawApply = (post.applyLink || '').trim();
+                    const hasApply = isValidHttpUrl(rawApply);
+
+                    const isLiked = Array.isArray(post.likes) && post.likes.includes(did);
+                    const isSaved = Array.isArray(window.JOBTOK_SAVED) && window.JOBTOK_SAVED.includes(post.id);
+                    const likeCount = Array.isArray(post.likes) ? post.likes.length : 0;
+                    const commentCount = Array.isArray(post.comments) ? post.comments.length : 0;
+                    const timeAgoStr = formatJobTokTime(post.createdAt);
+
+                    // CONDITIONAL VISUAL CONTAINER:
+                    let visualHtml = '';
+
+                    if (hasImage) {
+                        // Cases 3, 4, 5
+                        visualHtml = `
+                            <div class="jobtok-bg-blur" style="background-image: url('${escapeJobTokHtml(rawImage)}');"></div>
+                            <img class="jobtok-main-img" src="${escapeJobTokHtml(rawImage)}" alt="Job Opportunity" loading="lazy" onerror="this.style.opacity='0'">
+                        `;
+                    } else {
+                        // Cases 1, 2, 6 (Clean text card - no empty image box)
+                        let kicker = '📢 JOB ANNOUNCEMENT';
+                        if (hasApply) kicker = '🔥 HIRING OPPORTUNITY';
+                        
+                        let cardContent = '';
+                        if (hasCaption) {
+                            cardContent = `<div class="jobtok-text-card-body">${escapeJobTokHtml(rawCaption).replace(/\n/g, '<br>')}</div>`;
+                        } else if (hasApply) {
+                            // Case 6: Apply Link ONLY
+                            cardContent = `
+                                <div class="jobtok-text-card-body" style="text-align:center;padding:30px 10px;">
+                                    <i class="fas fa-briefcase" style="font-size:3.5rem;color:var(--acid);margin-bottom:16px;display:block;"></i>
+                                    <span style="font-family:'Unbounded';font-size:1.2rem;font-weight:700;display:block;margin-bottom:8px;">New Job Opening</span>
+                                    <span style="font-size:0.9rem;color:rgba(255,255,255,0.75);display:block;">Tap the application button below to view full eligibility details and apply directly.</span>
+                                </div>
+                            `;
+                        }
+
+                        visualHtml = `
+                            <div class="jobtok-text-card">
+                                <div class="jobtok-text-card-kicker"><i class="fas fa-bolt" style="margin-right:6px;color:var(--acid);"></i>${kicker}</div>
+                                ${cardContent}
+                            </div>
+                        `;
+                    }
+
+                    // CAPTION OVERLAY:
+                    // Only show on bottom overlay when an image is present and caption exists (Cases 3 & 5).
+                    let captionOverlayHtml = '';
+                    if (hasImage && hasCaption) {
+                        const isLong = rawCaption.length > 95;
+                        captionOverlayHtml = `
+                            <div class="jobtok-caption-box">
+                                <div class="jobtok-caption-text ${isLong ? 'clamped' : ''}" id="jobtokCap-${post.id}">
+                                    ${escapeJobTokHtml(rawCaption)}
+                                </div>
+                                ${isLong ? `<button class="jobtok-more-link" type="button" onclick="window.toggleJobTokCaption('${post.id}')">more</button>` : ''}
+                            </div>
+                        `;
+                    }
+
+                    // APPLY HERE BUTTON:
+                    // STRICT REQUIREMENT: ONLY display when hasApply is TRUE!
+                    let applyBtnHtml = '';
+                    if (hasApply) {
+                        applyBtnHtml = `
+                            <a href="${escapeJobTokHtml(rawApply)}" target="_blank" rel="noopener noreferrer" class="jobtok-apply-btn" onclick="event.stopPropagation();">
+                                <span>APPLY HERE</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        `;
+                    }
+
+                    return `
+                        <div class="jobtok-card" id="jobtok-post-${post.id}" data-post-id="${post.id}" ondblclick="window.handleJobTokDblClick('${post.id}', event)">
+                            ${visualHtml}
+                            <div class="jobtok-vignette"></div>
+
+                            <!-- Double Tap Heart Burst Animation -->
+                            <div class="jobtok-heart-burst" id="jobtokHeartBurst-${post.id}">
+                                <i class="fas fa-heart"></i>
+                            </div>
+
+                            <!-- Right Action Toolbar -->
+                            <div class="jobtok-toolbar">
+                                <div class="jobtok-action">
+                                    <button class="jobtok-btn-round ${isLiked ? 'liked' : ''}" id="jobtokLikeBtn-${post.id}" onclick="window.toggleLikeJobTok('${post.id}')" aria-label="Like post">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                    <span class="jobtok-action-num" id="jobtokLikeCount-${post.id}">${likeCount}</span>
+                                </div>
+                                <div class="jobtok-action">
+                                    <button class="jobtok-btn-round" onclick="window.openJobTokComments('${post.id}')" aria-label="Comments">
+                                        <i class="fas fa-comment"></i>
+                                    </button>
+                                    <span class="jobtok-action-num" id="jobtokCommentCount-${post.id}">${commentCount}</span>
+                                </div>
+                                <div class="jobtok-action">
+                                    <button class="jobtok-btn-round ${isSaved ? 'saved' : ''}" id="jobtokSaveBtn-${post.id}" onclick="window.toggleSaveJobTok('${post.id}')" aria-label="Save post">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                    <span class="jobtok-action-num" id="jobtokSaveLabel-${post.id}">${isSaved ? 'Saved' : 'Save'}</span>
+                                </div>
+                                <div class="jobtok-action">
+                                    <button class="jobtok-btn-round" onclick="window.shareJobTok('${post.id}')" aria-label="Share post">
+                                        <i class="fas fa-share"></i>
+                                    </button>
+                                    <span class="jobtok-action-num">Share</span>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Details & Apply -->
+                            <div class="jobtok-bottom">
+                                <div class="jobtok-author">
+                                    <div class="jobtok-avatar">GZ</div>
+                                    <div class="jobtok-author-text">
+                                        <div style="display:flex;align-items:center;gap:6px;">
+                                            <span>GZS Careers</span>
+                                            <i class="fas fa-check-circle" style="color:var(--cyan);font-size:0.75rem;" title="Verified Admin"></i>
+                                        </div>
+                                        <div class="jobtok-time">${timeAgoStr}</div>
+                                    </div>
+                                </div>
+                                ${captionOverlayHtml}
+                                ${applyBtnHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            };
+
+            // 5. Open / Close Viewer
+            window.openJobTok = function(targetPostId) {
+                const viewer = document.getElementById('jobtokViewer');
+                if (!viewer) return;
+                viewer.style.display = 'flex';
+                viewer.classList.add('active');
+                viewer.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+
+                window.renderJobTokFeed();
+
+                if (targetPostId) {
+                    setTimeout(() => {
+                        const el = document.getElementById('jobtok-post-' + targetPostId);
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }, 200);
+                }
+
+                if (!location.hash.startsWith('#jobtok')) {
+                    try {
+                        history.pushState(null, '', targetPostId ? `#jobtok?id=${targetPostId}` : '#jobtok');
+                    } catch(e) {}
+                }
+            };
+
+            window.closeJobTok = function() {
+                const viewer = document.getElementById('jobtokViewer');
+                if (!viewer) return;
+                viewer.style.display = 'none';
+                viewer.classList.remove('active');
+                viewer.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+                window.closeJobTokComments();
+
+                if (location.hash.startsWith('#jobtok')) {
+                    try {
+                        history.pushState(null, '', '#home');
+                    } catch(e) {}
+                }
+            };
+
+            window.switchJobTokTab = function(tab) {
+                window.JOBTOK_CURRENT_TAB = tab;
+                document.getElementById('jobtokTabForYou')?.classList.toggle('active', tab === 'foryou');
+                document.getElementById('jobtokTabSaved')?.classList.toggle('active', tab === 'saved');
+                window.renderJobTokFeed();
+            };
+
+            window.toggleJobTokCaption = function(id) {
+                const cap = document.getElementById('jobtokCap-' + id);
+                if (!cap) return;
+                const isClamped = cap.classList.contains('clamped');
+                cap.classList.toggle('clamped', !isClamped);
+                const btn = cap.parentElement?.querySelector('.jobtok-more-link');
+                if (btn) btn.textContent = isClamped ? 'less' : 'more';
+            };
+
+            // 6. User Interactions: Likes
+            window.handleJobTokDblClick = function(id, e) {
+                if (e) e.preventDefault();
+                const burst = document.getElementById('jobtokHeartBurst-' + id);
+                if (burst) {
+                    burst.classList.remove('animate');
+                    void burst.offsetWidth;
+                    burst.classList.add('animate');
+                    setTimeout(() => burst.classList.remove('animate'), 750);
+                }
+                const post = window.JOBTOK_POSTS.find(p => p.id === id);
+                const did = window.getJobTokDeviceId();
+                if (post && (!Array.isArray(post.likes) || !post.likes.includes(did))) {
+                    window.toggleLikeJobTok(id);
+                }
+            };
+
+            window.toggleLikeJobTok = async function(id) {
+                const post = window.JOBTOK_POSTS.find(p => p.id === id);
+                if (!post) return;
+                if (!Array.isArray(post.likes)) post.likes = [];
+                const did = window.getJobTokDeviceId();
+                const idx = post.likes.indexOf(did);
+                if (idx >= 0) {
+                    post.likes.splice(idx, 1);
+                } else {
+                    post.likes.push(did);
+                }
+
+                // Immediate UI update
+                const btn = document.getElementById('jobtokLikeBtn-' + id);
+                const cnt = document.getElementById('jobtokLikeCount-' + id);
+                const isLiked = post.likes.includes(did);
+                if (btn) btn.classList.toggle('liked', isLiked);
+                if (cnt) cnt.textContent = post.likes.length;
+
+                // Sync to Supabase
+                try {
+                    if (window.supabase) {
+                        await window.supabase.from('settings').update({
+                            body: JSON.stringify({
+                                caption: post.caption,
+                                image: post.image,
+                                applyLink: post.applyLink,
+                                likes: post.likes,
+                                comments: post.comments,
+                                createdAt: post.createdAt,
+                                updatedAt: Date.now()
+                            })
+                        }).eq('id', id);
+                    }
+                } catch(err) {
+                    console.warn('[JOBTOK] Failed to sync like:', err);
+                }
+            };
+
+            // 7. User Interactions: Saves / Bookmarks
+            window.toggleSaveJobTok = function(id) {
+                const idx = window.JOBTOK_SAVED.indexOf(id);
+                const isSavedNow = idx < 0;
+                if (isSavedNow) {
+                    window.JOBTOK_SAVED.push(id);
+                    if (window.showToast) window.showToast('Bookmark saved! Access it anytime in the Saved tab.', 'success');
+                } else {
+                    window.JOBTOK_SAVED.splice(idx, 1);
+                    if (window.showToast) window.showToast('Removed from saved bookmarks', 'info');
+                }
+
+                localStorage.setItem('jobtok_saved_posts', JSON.stringify(window.JOBTOK_SAVED));
+
+                const btn = document.getElementById('jobtokSaveBtn-' + id);
+                const lbl = document.getElementById('jobtokSaveLabel-' + id);
+                if (btn) btn.classList.toggle('saved', isSavedNow);
+                if (lbl) lbl.textContent = isSavedNow ? 'Saved' : 'Save';
+
+                if (window.JOBTOK_CURRENT_TAB === 'saved') {
+                    window.renderJobTokFeed();
+                }
+            };
+
+            // 8. User Interactions: Comments Bottom Sheet
+            window.openJobTokComments = function(id) {
+                const post = window.JOBTOK_POSTS.find(p => p.id === id);
+                if (!post) return;
+                window.JOBTOK_ACTIVE_COMMENT_POST_ID = id;
+
+                const sheet = document.getElementById('jobtokCommentsSheet');
+                const backdrop = document.getElementById('jobtokCommentsBackdrop');
+                const countEl = document.getElementById('jobtokCommentsCount');
+                const inputEl = document.getElementById('jobtokCommentInput');
+
+                if (countEl) countEl.textContent = (post.comments || []).length;
+
+                window.renderJobTokCommentsList(post);
+
+                if (backdrop) backdrop.classList.add('active');
+                if (sheet) sheet.classList.add('active');
+                if (inputEl) {
+                    setTimeout(() => inputEl.focus(), 300);
+                }
+            };
+
+            window.closeJobTokComments = function() {
+                const sheet = document.getElementById('jobtokCommentsSheet');
+                const backdrop = document.getElementById('jobtokCommentsBackdrop');
+                if (sheet) sheet.classList.remove('active');
+                if (backdrop) backdrop.classList.remove('active');
+                window.JOBTOK_ACTIVE_COMMENT_POST_ID = null;
+            };
+
+            window.renderJobTokCommentsList = function(post) {
+                const listEl = document.getElementById('jobtokCommentsList');
+                if (!listEl) return;
+                const comments = Array.isArray(post.comments) ? post.comments : [];
+                if (comments.length === 0) {
+                    listEl.innerHTML = `
+                        <div style="text-align:center;padding:40px 16px;color:rgba(255,255,255,0.4);">
+                            <i class="far fa-comments" style="font-size:2.5rem;margin-bottom:12px;display:block;"></i>
+                            <div style="font-size:0.95rem;font-weight:600;color:#fff;">No comments yet</div>
+                            <div style="font-size:0.8rem;margin-top:4px;">Be the first to leave an inquiry about this opening!</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const curDid = window.getJobTokDeviceId();
+                const isAdmin = Boolean(window.CURRENT_USER && (window.CURRENT_USER.role === 'admin' || window.IS_ADMIN));
+
+                listEl.innerHTML = comments.map(c => {
+                    const canDelete = c.deviceId === curDid || isAdmin;
+                    const authorInitial = (c.author || 'U').charAt(0).toUpperCase();
+                    const timeAgo = formatJobTokTime(c.createdAt);
+                    return `
+                        <div class="jobtok-comment-item" id="jobtokComment-${c.id}">
+                            <div class="jobtok-comment-avatar">${escapeJobTokHtml(authorInitial)}</div>
+                            <div class="jobtok-comment-content">
+                                <div class="jobtok-comment-top">
+                                    <span class="jobtok-comment-author">${escapeJobTokHtml(c.author || 'User')}</span>
+                                    <span class="jobtok-comment-time">${timeAgo}</span>
+                                    ${canDelete ? `<button class="jobtok-comment-del" onclick="window.deleteJobTokComment('${c.id}')" title="Delete comment"><i class="fas fa-trash-alt"></i></button>` : ''}
+                                </div>
+                                <div class="jobtok-comment-body">${escapeJobTokHtml(c.text)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            };
+
+            window.submitJobTokComment = async function(e) {
+                if (e) e.preventDefault();
+                const id = window.JOBTOK_ACTIVE_COMMENT_POST_ID;
+                if (!id) return;
+                const post = window.JOBTOK_POSTS.find(p => p.id === id);
+                if (!post) return;
+
+                const input = document.getElementById('jobtokCommentInput');
+                const text = input ? input.value.trim() : '';
+                if (!text) return;
+
+                if (!Array.isArray(post.comments)) post.comments = [];
+                const newComment = {
+                    id: 'c_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+                    author: window.getJobTokUserName(),
+                    deviceId: window.getJobTokDeviceId(),
+                    text: text,
+                    createdAt: Date.now()
+                };
+
+                post.comments.push(newComment);
+                if (input) input.value = '';
+
+                const countEl = document.getElementById('jobtokCommentsCount');
+                if (countEl) countEl.textContent = post.comments.length;
+                const postCountEl = document.getElementById('jobtokCommentCount-' + id);
+                if (postCountEl) postCountEl.textContent = post.comments.length;
+
+                window.renderJobTokCommentsList(post);
+
+                const listEl = document.getElementById('jobtokCommentsList');
+                if (listEl) listEl.scrollTop = listEl.scrollHeight;
+
+                try {
+                    if (window.supabase) {
+                        await window.supabase.from('settings').update({
+                            body: JSON.stringify({
+                                caption: post.caption,
+                                image: post.image,
+                                applyLink: post.applyLink,
+                                likes: post.likes,
+                                comments: post.comments,
+                                createdAt: post.createdAt,
+                                updatedAt: Date.now()
+                            })
+                        }).eq('id', id);
+                    }
+                } catch(err) {
+                    console.warn('[JOBTOK] Failed to sync comment:', err);
+                }
+            };
+
+            window.deleteJobTokComment = async function(commentId) {
+                const id = window.JOBTOK_ACTIVE_COMMENT_POST_ID;
+                if (!id) return;
+                const post = window.JOBTOK_POSTS.find(p => p.id === id);
+                if (!post || !Array.isArray(post.comments)) return;
+
+                if (!confirm('Are you sure you want to delete this comment?')) return;
+
+                post.comments = post.comments.filter(c => c.id !== commentId);
+
+                const countEl = document.getElementById('jobtokCommentsCount');
+                if (countEl) countEl.textContent = post.comments.length;
+                const postCountEl = document.getElementById('jobtokCommentCount-' + id);
+                if (postCountEl) postCountEl.textContent = post.comments.length;
+
+                window.renderJobTokCommentsList(post);
+
+                try {
+                    if (window.supabase) {
+                        await window.supabase.from('settings').update({
+                            body: JSON.stringify({
+                                caption: post.caption,
+                                image: post.image,
+                                applyLink: post.applyLink,
+                                likes: post.likes,
+                                comments: post.comments,
+                                createdAt: post.createdAt,
+                                updatedAt: Date.now()
+                            })
+                        }).eq('id', id);
+                    }
+                } catch(err) {
+                    console.warn('[JOBTOK] Failed to delete comment from DB:', err);
+                }
+            };
+
+            // 9. User Interactions: Sharing & Deep Links
+            window.shareJobTok = async function(id) {
+                const post = window.JOBTOK_POSTS.find(p => p.id === id);
+                const deepUrl = `${window.location.origin}${window.location.pathname}#jobtok?id=${id}`;
+                const shareTitle = 'JOBTOK - Career Opportunity';
+                const shareText = post?.caption ? (post.caption.length > 80 ? post.caption.substring(0, 80) + '...' : post.caption) : 'Check out this job opportunity on JOBTOK!';
+
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: shareTitle,
+                            text: shareText,
+                            url: deepUrl
+                        });
+                        return;
+                    } catch (err) {
+                        if (err.name === 'AbortError') return;
+                    }
+                }
+
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(deepUrl);
+                        if (window.showToast) window.showToast('Link copied to clipboard! Share it with friends.', 'success');
+                        else alert('Job post link copied to clipboard!');
+                    } else {
+                        prompt('Copy this JOBTOK link:', deepUrl);
+                    }
+                } catch (e) {
+                    prompt('Copy this JOBTOK link:', deepUrl);
+                }
+            };
+
+            // 10. Admin Panel Management Functions
+            window.previewJobTokImage = function(url) {
+                const box = document.getElementById('jobtokImagePreviewBox');
+                const img = document.getElementById('jobtokImagePreview');
+                if (!box || !img) return;
+                if (url && isValidHttpUrl(url)) {
+                    img.src = url;
+                    box.style.display = 'block';
+                    img.onerror = () => { box.style.display = 'none'; };
+                    img.onload = () => { box.style.display = 'block'; };
+                } else {
+                    box.style.display = 'none';
+                }
+            };
+
+            window.resetJobTokForm = function() {
+                const idEl = document.getElementById('jobtokEditId');
+                if (idEl) idEl.value = '';
+                const capEl = document.getElementById('jobtokCaptionInput');
+                if (capEl) capEl.value = '';
+                const imgEl = document.getElementById('jobtokImageInput');
+                if (imgEl) imgEl.value = '';
+                const appEl = document.getElementById('jobtokApplyInput');
+                if (appEl) appEl.value = '';
+                const chkEl = document.getElementById('jobtokActiveCheck');
+                if (chkEl) chkEl.checked = true;
+                const prevBox = document.getElementById('jobtokImagePreviewBox');
+                if (prevBox) prevBox.style.display = 'none';
+                const canBtn = document.getElementById('jobtokCancelBtn');
+                if (canBtn) canBtn.style.display = 'none';
+                const submitBtn = document.getElementById('jobtokSubmitBtn');
+                if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Post';
+                const title = document.getElementById('jobtokComposerTitle');
+                if (title) title.innerHTML = '<i class="fas fa-plus-circle" style="color:var(--acid);"></i> Create / Edit JOBTOK Post';
+            };
+
+            window.editJobTokPost = function(id) {
+                const post = window.JOBTOK_POSTS.find(p => p.id === id);
+                if (!post) return;
+                document.getElementById('jobtokEditId').value = post.id;
+                document.getElementById('jobtokCaptionInput').value = post.caption || '';
+                document.getElementById('jobtokImageInput').value = post.image || '';
+                document.getElementById('jobtokApplyInput').value = post.applyLink || '';
+                document.getElementById('jobtokActiveCheck').checked = post.active !== false;
+                window.previewJobTokImage(post.image);
+
+                document.getElementById('jobtokCancelBtn').style.display = 'inline-block';
+                const submitBtn = document.getElementById('jobtokSubmitBtn');
+                if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                const title = document.getElementById('jobtokComposerTitle');
+                if (title) title.innerHTML = '<i class="fas fa-edit" style="color:var(--cyan);"></i> Editing Post #' + post.id.slice(-6);
+
+                document.getElementById('ap-jobtok')?.scrollIntoView({ behavior: 'smooth' });
+            };
+
+            window.saveJobTokPost = async function() {
+                const editId = (document.getElementById('jobtokEditId')?.value || '').trim();
+                const caption = (document.getElementById('jobtokCaptionInput')?.value || '').trim();
+                const image = (document.getElementById('jobtokImageInput')?.value || '').trim();
+                const applyLink = (document.getElementById('jobtokApplyInput')?.value || '').trim();
+                const active = document.getElementById('jobtokActiveCheck')?.checked !== false;
+
+                if (!caption && !image && !applyLink) {
+                    if (window.showToast) window.showToast('Please provide at least a caption, image, or apply link.', 'error');
+                    else alert('Please provide at least a caption, image, or apply link.');
+                    return;
+                }
+
+                if (applyLink && !isValidHttpUrl(applyLink)) {
+                    if (window.showToast) window.showToast('Please enter a valid URL for the Apply Link (must start with http:// or https://)', 'error');
+                    else alert('Invalid Apply URL: must start with http:// or https://');
+                    return;
+                }
+
+                const submitBtn = document.getElementById('jobtokSubmitBtn');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                }
+
+                try {
+                    if (editId) {
+                        const post = window.JOBTOK_POSTS.find(p => p.id === editId);
+                        const likes = post?.likes || [];
+                        const comments = post?.comments || [];
+                        const createdAt = post?.createdAt || Date.now();
+                        const payload = {
+                            title: caption ? caption.substring(0, 100) : 'Jobtok Post',
+                            img: image || null,
+                            link: applyLink || null,
+                            active: active,
+                            body: JSON.stringify({
+                                caption,
+                                image,
+                                applyLink,
+                                likes,
+                                comments,
+                                createdAt,
+                                updatedAt: Date.now()
+                            })
+                        };
+
+                        const { error } = await window.supabase.from('settings').update(payload).eq('id', editId);
+                        if (error) throw error;
+                        if (window.showToast) window.showToast('Post updated successfully!', 'success');
+                    } else {
+                        const newId = 'jobtok_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+                        const payload = {
+                            id: newId,
+                            type: 'jobtok',
+                            title: caption ? caption.substring(0, 100) : 'Jobtok Post',
+                            img: image || null,
+                            link: applyLink || null,
+                            active: active,
+                            body: JSON.stringify({
+                                caption,
+                                image,
+                                applyLink,
+                                likes: [],
+                                comments: [],
+                                createdAt: Date.now(),
+                                updatedAt: Date.now()
+                            })
+                        };
+
+                        const { error } = await window.supabase.from('settings').insert([payload]);
+                        if (error) throw error;
+                        if (window.showToast) window.showToast('New JOBTOK post published!', 'success');
+                    }
+
+                    window.resetJobTokForm();
+                    await window.loadJobTokPosts();
+                    window.renderApJobTok();
+                } catch(err) {
+                    console.error('[JOBTOK] Save error:', err);
+                    if (window.showToast) window.showToast('Failed to save post: ' + (err.message || 'Unknown error'), 'error');
+                    else alert('Failed to save post: ' + err.message);
+                } finally {
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            };
+
+            window.deleteJobTokPost = async function(id) {
+                if (!confirm('Are you sure you want to permanently delete this JOBTOK post?')) return;
+                try {
+                    const { error } = await window.supabase.from('settings').delete().eq('id', id);
+                    if (error) throw error;
+                    if (window.showToast) window.showToast('Post deleted', 'info');
+                    window.JOBTOK_POSTS = window.JOBTOK_POSTS.filter(p => p.id !== id);
+                    window.renderApJobTok();
+                    window.renderJobTokFeed();
+                } catch(err) {
+                    console.error('[JOBTOK] Delete error:', err);
+                    if (window.showToast) window.showToast('Failed to delete post: ' + err.message, 'error');
+                }
+            };
+
+            window.renderApJobTok = function() {
+                const countEl = document.getElementById('jobtokApCount');
+                const listEl = document.getElementById('jobtokAdminList');
+                if (!listEl) return;
+
+                if (countEl) countEl.textContent = window.JOBTOK_POSTS.length;
+
+                if (window.JOBTOK_POSTS.length === 0) {
+                    listEl.innerHTML = `
+                        <div style="text-align:center;padding:32px;color:var(--muted);background:var(--ink2);border-radius:10px;border:1px dashed var(--border);">
+                            <i class="fas fa-briefcase" style="font-size:2rem;margin-bottom:8px;display:block;"></i>
+                            No JOBTOK posts created yet. Use the composer above to publish your first job post!
+                        </div>
+                    `;
+                    return;
+                }
+
+                listEl.innerHTML = window.JOBTOK_POSTS.map(post => {
+                    const hasImg = Boolean(post.image && post.image.trim());
+                    const hasApp = Boolean(post.applyLink && post.applyLink.trim());
+                    const likeCount = (post.likes || []).length;
+                    const commentCount = (post.comments || []).length;
+                    const timeAgo = formatJobTokTime(post.createdAt);
+
+                    return `
+                        <div class="jobtok-ap-card">
+                            <div class="jobtok-ap-thumb">
+                                ${hasImg ? `<img src="${escapeJobTokHtml(post.image)}" alt="Thumb" onerror="this.src='https://picsum.photos/100/100?random=99'">` : `<i class="fas fa-file-alt" style="font-size:1.8rem;color:var(--acid);"></i>`}
+                            </div>
+                            <div class="jobtok-ap-info">
+                                <h4>${escapeJobTokHtml(post.caption ? (post.caption.length > 90 ? post.caption.substring(0, 90) + '...' : post.caption) : (hasApp ? 'Application Link Post' : 'Image Post'))}</h4>
+                                <div class="jobtok-ap-meta">
+                                    <span><i class="fas fa-heart" style="color:var(--warm);"></i> ${likeCount} likes</span>
+                                    <span><i class="fas fa-comment" style="color:var(--cyan);"></i> ${commentCount} comments</span>
+                                    <span><i class="far fa-clock"></i> ${timeAgo}</span>
+                                    ${hasApp ? `<span style="background:rgba(218,255,1,0.12);color:var(--acid);padding:2px 8px;border-radius:4px;font-size:0.65rem;font-weight:700;"><i class="fas fa-link"></i> Apply Link</span>` : ''}
+                                    <span style="background:${post.active !== false ? 'rgba(0,255,128,0.12);color:#00ff80' : 'rgba(255,255,255,0.1);color:var(--muted)'};padding:2px 8px;border-radius:4px;font-size:0.65rem;font-weight:700;">
+                                        ${post.active !== false ? '● Active' : '○ Inactive'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="jobtok-ap-actions">
+                                <button class="ap-btn cyan" style="padding:6px 12px;font-size:0.75rem;" onclick="window.openJobTok('${post.id}')" title="View in Feed"><i class="fas fa-eye"></i> View</button>
+                                <button class="ap-btn warm" style="padding:6px 12px;font-size:0.75rem;" onclick="window.editJobTokPost('${post.id}')" title="Edit Post"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="ap-btn red" style="padding:6px 10px;font-size:0.75rem;" onclick="window.deleteJobTokPost('${post.id}')" title="Delete Post"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            };
+
+            // 11. Event Listeners: Deep-Linking & Keyboard
+            window.addEventListener('hashchange', () => {
+                if (location.hash.startsWith('#jobtok')) {
+                    const match = location.hash.match(/[?&]id=([^&]+)/);
+                    const postId = match ? match[1] : null;
+                    window.openJobTok(postId);
+                } else {
+                    const viewer = document.getElementById('jobtokViewer');
+                    if (viewer && viewer.style.display !== 'none') {
+                        window.closeJobTok();
+                    }
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const comments = document.getElementById('jobtokCommentsSheet');
+                    if (comments && comments.classList.contains('active')) {
+                        window.closeJobTokComments();
+                        return;
+                    }
+                    const viewer = document.getElementById('jobtokViewer');
+                    if (viewer && viewer.style.display !== 'none') {
+                        window.closeJobTok();
+                    }
+                }
+            });
+
+            // 12. Boot & Initial Load
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    window.loadJobTokPosts();
+                    if (location.hash.startsWith('#jobtok')) {
+                        const match = location.hash.match(/[?&]id=([^&]+)/);
+                        const postId = match ? match[1] : null;
+                        setTimeout(() => window.openJobTok(postId), 300);
+                    }
+                });
+            } else {
+                window.loadJobTokPosts();
+                if (location.hash.startsWith('#jobtok')) {
+                    const match = location.hash.match(/[?&]id=([^&]+)/);
+                    const postId = match ? match[1] : null;
+                    setTimeout(() => window.openJobTok(postId), 300);
+                }
+            }
+        })();
         </script>
 </body>
 
