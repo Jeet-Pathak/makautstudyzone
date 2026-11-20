@@ -2866,7 +2866,7 @@
             else if (sec === 'courseaccess') window.renderApCourseAccess();
             else if (sec === 'ca3') window.renderApCA3();
             else if (sec === 'pushnotifications') window.renderApPushNotifications();
-            else if (sec === 'jobtok') window.renderApJobTok();
+            else if (sec === 'jobtok' || sec === 'shorts') window.renderApJobTok();
         };
         window.renderApPushNotifications = async () => {
             const btn = document.getElementById('btnSendPush');
@@ -5072,7 +5072,7 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
             l.innerHTML = window.CUSTOM_SECTIONS.map(s => `<div style="background:var(--ink2);border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div style="font-family:'Unbounded';font-weight:700">${s.name} <span style="font-family:'JetBrains Mono';font-size:0.6rem;color:var(--muted)">(${s.slug})</span></div><div style="display:flex;gap:12px;align-items:center"><label style="font-size:0.65rem;cursor:pointer"><input type="checkbox" ${s.visible ? 'checked' : ''} onchange="toggleCustomVisible('${s.id}',this.checked)"> Show</label><button onclick="selectCustomSection('${s.slug}','${s.name}')" class="ap-btn cyan" style="padding:6px 14px;font-size:0.55rem">Manage</button><button onclick="deleteCustomSection('${s.id}')" class="ap-btn red" style="padding:6px 10px;font-size:0.55rem"><i class="fas fa-trash"></i></button></div></div>`).join('') || `<div style="color:var(--muted);text-align:center;padding:30px">No custom sections</div>`;
         };
         window.nav = (page, opts = {}) => {
-            if (page === 'jobtok') { if (window.openJobTok) window.openJobTok(); return; }
+            if (page === 'jobtok' || page === 'shorts') { if (window.openJobTok) window.openJobTok(); return; }
             if (page === 'team') page = 'home';
             if (!document.getElementById('page-' + page)) page = 'home';
             if (!opts.keepHash) {
@@ -6345,7 +6345,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         window.initFlowingMenu = () => {
             const items = [
                 { text: 'Home', target: 'home', img: 'https://picsum.photos/600/400?random=1' },
-                { text: 'JOBTOK REELS', target: 'jobtok', img: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&auto=format&fit=crop&q=80' },
+                { text: 'Shorts', target: 'shorts', img: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&auto=format&fit=crop&q=80' },
                 { text: 'Courses', target: 'premium-courses', img: 'https://picsum.photos/600/400?random=10' },
                 { text: 'Academic', target: 'academic', img: 'https://picsum.photos/600/400?random=2' },
                 { text: 'PYQ', target: 'pyq', img: 'https://picsum.photos/600/400?random=3' },
@@ -19906,7 +19906,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
     <div class="jobtok-overlay" id="jobtokViewer" style="display:none;" aria-hidden="true">
         <!-- Top Navigation Bar -->
         <div class="jobtok-topbar">
-            <button class="jobtok-top-btn" id="jobtokCloseBtn" onclick="window.closeJobTok()" aria-label="Close JOBTOK" title="Close (Esc)">
+            <button class="jobtok-top-btn" id="jobtokCloseBtn" onclick="window.closeJobTok()" aria-label="Close Shorts" title="Close (Esc)">
                 <i class="fas fa-arrow-left"></i>
             </button>
             <div class="jobtok-tabs">
@@ -19914,7 +19914,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 <button class="jobtok-tab" id="jobtokTabSaved" onclick="window.switchJobTokTab('saved')">Saved</button>
             </div>
             <div style="width:40px;display:flex;justify-content:flex-end;">
-                <span class="jobtok-nav-badge" style="font-size:0.6rem;padding:3px 7px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border-radius:999px;font-weight:700;letter-spacing:1px;color:#fff;">JOBTOK</span>
+                <span class="jobtok-nav-badge" style="font-size:0.6rem;padding:3px 7px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border-radius:999px;font-weight:700;letter-spacing:1px;color:#fff;">SHORTS</span>
             </div>
         </div>
 
@@ -19957,7 +19957,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 </div>
                 <nav class="sm-nav">
                     <a class="sm-link" onclick="window.openJobTok(); window.closeDesktopMenu();"><span
-                            class="sm-link-text" style="display:flex;align-items:center;gap:8px;"><i class="fas fa-play" style="color:var(--acid);font-size:0.75rem;"></i> JOBTOK <span class="jobtok-nav-badge" style="font-size:0.55rem;background:var(--acid);color:#000;padding:2px 6px;border-radius:999px;font-weight:800;letter-spacing:1px;">REELS</span></span></a>
+                            class="sm-link-text" style="display:flex;align-items:center;gap:8px;"><i class="fas fa-play" style="color:var(--acid);font-size:0.75rem;"></i> Shorts</span></a>
                     <a class="sm-link" onclick="window.nav('home'); window.closeDesktopMenu();"><span
                             class="sm-link-text">Home</span></a>
                     <a class="sm-link" onclick="window.nav('premium-courses'); window.closeDesktopMenu();"><span
@@ -23063,7 +23063,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                         <div class="ap-nav-item active" onclick="apNav('dashboard')"><i
                                 class="fas fa-tachometer-alt"></i> Dashboard
                         </div>
-                        <div class="ap-nav-item" onclick="apNav('jobtok')"><i class="fas fa-play-circle" style="color:var(--acid);"></i> Manage JOBTOK</div>
+                        <div class="ap-nav-item" onclick="apNav('jobtok')"><i class="fas fa-play-circle" style="color:var(--acid);"></i> Manage Shorts</div>
                         <div class="ap-nav-item" onclick="apNav('subjects')"><i class="fas fa-book"></i> Subjects</div>
                         <div class="ap-nav-item" onclick="apNav('courses')"><i class="fas fa-graduation-cap"></i>
                             Courses</div>
@@ -23114,14 +23114,14 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     <!-- JOBTOK ADMIN MANAGEMENT SECTION -->
                     <div class="ap-sec" id="ap-jobtok">
                         <div class="ap-hdr">
-                            <h2><i class="fas fa-play-circle" style="color:var(--acid);margin-right:10px;"></i>Manage JOBTOK</h2>
-                            <p>Instagram Reels-style job feed: post job opportunities, recruitment updates, announcements, and track engagement.</p>
+                            <h2><i class="fas fa-play-circle" style="color:var(--acid);margin-right:10px;"></i>Manage Shorts</h2>
+                            <p>Reels/Shorts-style job feed: post job opportunities, recruitment updates, announcements, and track engagement.</p>
                         </div>
 
                         <!-- Post Composer Card -->
                         <div class="ap-card" style="margin-top:20px;">
                             <h3 id="jobtokComposerTitle" style="display:flex;align-items:center;gap:8px;font-size:1.1rem;margin-bottom:16px;">
-                                <i class="fas fa-plus-circle" style="color:var(--acid);"></i> Create / Edit JOBTOK Post
+                                <i class="fas fa-plus-circle" style="color:var(--acid);"></i> Create / Edit Shorts Post
                             </h3>
                             <input type="hidden" id="jobtokEditId">
                             
@@ -24800,7 +24800,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
             // 🔹 Navigation Integration
             const _origNav = window.nav;
             window.nav = (page) => {
-                if (page === 'jobtok') {
+                if (page === 'jobtok' || page === 'shorts') {
                     if (window.openJobTok) window.openJobTok();
                     return;
                 }
@@ -24821,7 +24821,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 _origApNav?.(sec);
                 if (sec === 'ca3') {
                     window.renderApCA3();
-                } else if (sec === 'jobtok') {
+                } else if (sec === 'jobtok' || sec === 'shorts') {
                     if (window.renderApJobTok) window.renderApJobTok();
                 }
             };
@@ -28265,9 +28265,9 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                     }, 200);
                 }
 
-                if (!location.hash.startsWith('#jobtok')) {
+                if (!location.hash.startsWith('#shorts') && !location.hash.startsWith('#jobtok')) {
                     try {
-                        history.pushState(null, '', targetPostId ? `#jobtok?id=${targetPostId}` : '#jobtok');
+                        history.pushState(null, '', targetPostId ? `#shorts?id=${targetPostId}` : '#shorts');
                     } catch(e) {}
                 }
             };
@@ -28281,7 +28281,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 document.body.style.overflow = '';
                 window.closeJobTokComments();
 
-                if (location.hash.startsWith('#jobtok')) {
+                if (location.hash.startsWith('#shorts') || location.hash.startsWith('#jobtok')) {
                     try {
                         history.pushState(null, '', '#home');
                     } catch(e) {}
@@ -28543,9 +28543,9 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
             // 9. User Interactions: Sharing & Deep Links
             window.shareJobTok = async function(id) {
                 const post = window.JOBTOK_POSTS.find(p => p.id === id);
-                const deepUrl = `${window.location.origin}${window.location.pathname}#jobtok?id=${id}`;
-                const shareTitle = 'JOBTOK - Career Opportunity';
-                const shareText = post?.caption ? (post.caption.length > 80 ? post.caption.substring(0, 80) + '...' : post.caption) : 'Check out this job opportunity on JOBTOK!';
+                const deepUrl = `${window.location.origin}${window.location.pathname}#shorts?id=${id}`;
+                const shareTitle = 'Shorts - Career Opportunity';
+                const shareText = post?.caption ? (post.caption.length > 80 ? post.caption.substring(0, 80) + '...' : post.caption) : 'Check out this career opportunity on Shorts!';
 
                 if (navigator.share) {
                     try {
@@ -28564,12 +28564,12 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                     if (navigator.clipboard && navigator.clipboard.writeText) {
                         await navigator.clipboard.writeText(deepUrl);
                         if (window.showToast) window.showToast('Link copied to clipboard! Share it with friends.', 'success');
-                        else alert('Job post link copied to clipboard!');
+                        else alert('Shorts post link copied to clipboard!');
                     } else {
-                        prompt('Copy this JOBTOK link:', deepUrl);
+                        prompt('Copy this Shorts link:', deepUrl);
                     }
                 } catch (e) {
-                    prompt('Copy this JOBTOK link:', deepUrl);
+                    prompt('Copy this Shorts link:', deepUrl);
                 }
             };
 
@@ -28606,7 +28606,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 const submitBtn = document.getElementById('jobtokSubmitBtn');
                 if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Post';
                 const title = document.getElementById('jobtokComposerTitle');
-                if (title) title.innerHTML = '<i class="fas fa-plus-circle" style="color:var(--acid);"></i> Create / Edit JOBTOK Post';
+                if (title) title.innerHTML = '<i class="fas fa-plus-circle" style="color:var(--acid);"></i> Create / Edit Shorts Post';
             };
 
             window.editJobTokPost = function(id) {
@@ -28700,7 +28700,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
 
                         const { error } = await window.supabase.from('settings').insert([payload]);
                         if (error) throw error;
-                        if (window.showToast) window.showToast('New JOBTOK post published!', 'success');
+                        if (window.showToast) window.showToast('New Shorts post published!', 'success');
                     }
 
                     window.resetJobTokForm();
@@ -28716,7 +28716,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
             };
 
             window.deleteJobTokPost = async function(id) {
-                if (!confirm('Are you sure you want to permanently delete this JOBTOK post?')) return;
+                if (!confirm('Are you sure you want to permanently delete this Shorts post?')) return;
                 try {
                     const { error } = await window.supabase.from('settings').delete().eq('id', id);
                     if (error) throw error;
@@ -28741,7 +28741,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                     listEl.innerHTML = `
                         <div style="text-align:center;padding:32px;color:var(--muted);background:var(--ink2);border-radius:10px;border:1px dashed var(--border);">
                             <i class="fas fa-briefcase" style="font-size:2rem;margin-bottom:8px;display:block;"></i>
-                            No JOBTOK posts created yet. Use the composer above to publish your first job post!
+                            No Shorts posts created yet. Use the composer above to publish your first job post!
                         </div>
                     `;
                     return;
@@ -28781,9 +28781,13 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 }).join('');
             };
 
+            // Global aliases
+            window.openShorts = window.openJobTok;
+            window.closeShorts = window.closeJobTok;
+
             // 11. Event Listeners: Deep-Linking & Keyboard
             window.addEventListener('hashchange', () => {
-                if (location.hash.startsWith('#jobtok')) {
+                if (location.hash.startsWith('#shorts') || location.hash.startsWith('#jobtok')) {
                     const match = location.hash.match(/[?&]id=([^&]+)/);
                     const postId = match ? match[1] : null;
                     window.openJobTok(postId);
@@ -28813,7 +28817,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', () => {
                     window.loadJobTokPosts();
-                    if (location.hash.startsWith('#jobtok')) {
+                    if (location.hash.startsWith('#shorts') || location.hash.startsWith('#jobtok')) {
                         const match = location.hash.match(/[?&]id=([^&]+)/);
                         const postId = match ? match[1] : null;
                         setTimeout(() => window.openJobTok(postId), 300);
@@ -28821,7 +28825,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 });
             } else {
                 window.loadJobTokPosts();
-                if (location.hash.startsWith('#jobtok')) {
+                if (location.hash.startsWith('#shorts') || location.hash.startsWith('#jobtok')) {
                     const match = location.hash.match(/[?&]id=([^&]+)/);
                     const postId = match ? match[1] : null;
                     setTimeout(() => window.openJobTok(postId), 300);
