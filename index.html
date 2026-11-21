@@ -2867,6 +2867,7 @@
             else if (sec === 'ca3') window.renderApCA3();
             else if (sec === 'pushnotifications') window.renderApPushNotifications();
             else if (sec === 'jobtok' || sec === 'shorts') window.renderApJobTok();
+            else if (sec === 'unofficial_notes') window.renderApUnofficialNotes();
         };
         window.renderApPushNotifications = async () => {
             const btn = document.getElementById('btnSendPush');
@@ -4451,21 +4452,116 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
         window.openLibPDF = (url) => { if (!window.checkAuthClick()) return; if (url && url !== '#') window.open(url, '_blank'); };
         window.renderAcademic = () => {
             const g = document.getElementById('notesGrid'); if (!g) return;
-            const m = window.currentAcademicMode;
-            const d = m === 'notes' ? window.NOTES : window.ANSWERS;
-            const q = (document.getElementById('noteSearch')?.value || '').toUpperCase();
-            const f = d.filter(n => n.year === window.FILTERS.year && n.sem === window.FILTERS.sem && (n.title?.toUpperCase().includes(q) || n.stream?.toUpperCase().includes(q)));
-            if (!f.length) { g.innerHTML = `<div class="no-data">No ${m} found</div>`; return; }
-            g.innerHTML = f.map(n => {
-                const nCat = window.parseTitleCategory(n.title);
-                let badge = '';
-                if (nCat.category === 'suggestion') {
-                    badge = `<div class="sp-cat-badge badge-suggestion" style="margin-bottom:6px;"><i class="fas fa-lightbulb"></i> SUGGESTIONS</div>`;
-                } else if (nCat.category === 'oneshot') {
-                    badge = `<div class="sp-cat-badge badge-oneshot" style="margin-bottom:6px;"><i class="fas fa-bolt"></i> ONE SHOT</div>`;
+            const cat = window.currentNotesCategory || 'official';
+
+            if (cat === 'official') {
+                const creatorBanner = document.getElementById('unofficialCreatorBanner');
+                if (creatorBanner) creatorBanner.style.display = 'none';
+
+                const m = window.currentAcademicMode || 'notes';
+                const d = m === 'notes' ? window.NOTES : window.ANSWERS;
+                const q = (document.getElementById('noteSearch')?.value || '').toUpperCase();
+                const f = d.filter(n => String(n.year) === String(window.FILTERS.year) && String(n.sem).toLowerCase() === String(window.FILTERS.sem).toLowerCase() && (n.title?.toUpperCase().includes(q) || n.stream?.toUpperCase().includes(q)));
+                if (!f.length) { g.innerHTML = `<div class="no-data">No official ${m} found for Year ${window.FILTERS.year} · ${String(window.FILTERS.sem || '').toUpperCase()}</div>`; return; }
+                g.innerHTML = f.map(n => {
+                    const nCat = window.parseTitleCategory(n.title);
+                    let badge = '';
+                    if (nCat.category === 'suggestion') {
+                        badge = `<div class="sp-cat-badge badge-suggestion" style="margin-bottom:6px;"><i class="fas fa-lightbulb"></i> SUGGESTIONS</div>`;
+                    } else if (nCat.category === 'oneshot') {
+                        badge = `<div class="sp-cat-badge badge-oneshot" style="margin-bottom:6px;"><i class="fas fa-bolt"></i> ONE SHOT</div>`;
+                    }
+                    return `<div class="note-card vis" id="${window.materialDomId(m, n.id)}">${window.shareButtons(m, n.id)}<div class="card-meta"><span class="card-dept-note">${n.stream || '—'}</span><span>Yr ${n.year} · ${n.sem?.toUpperCase()}</span></div>${badge}<div class="card-title">${window.htmlEsc(nCat.cleanTitle)}</div><button class="dl-btn dl-btn-acid" onclick="if(window.checkAuthClick()){window.open('${n.link || '#'}', '_blank');}"><i class="fas fa-eye"></i> View PDF</button></div>`;
+                }).join('');
+            } else {
+                const q = (document.getElementById('noteSearch')?.value || '').toUpperCase();
+                const creator = window.activeCreatorFilter;
+
+                const creatorBanner = document.getElementById('unofficialCreatorBanner');
+                const creatorNameEl = document.getElementById('activeCreatorName');
+                if (creatorBanner && creatorNameEl) {
+                    if (creator) {
+                        creatorBanner.style.display = 'flex';
+                        creatorNameEl.textContent = creator;
+                    } else {
+                        creatorBanner.style.display = 'none';
+                    }
                 }
-                return `<div class="note-card vis" id="${window.materialDomId(m, n.id)}">${window.shareButtons(m, n.id)}<div class="card-meta"><span class="card-dept-note">${n.stream || '—'}</span><span>Yr ${n.year} · ${n.sem?.toUpperCase()}</span></div>${badge}<div class="card-title">${window.htmlEsc(nCat.cleanTitle)}</div><button class="dl-btn dl-btn-acid" onclick="if(window.checkAuthClick()){window.open('${n.link || '#'}', '_blank');}"><i class="fas fa-eye"></i> View PDF</button></div>`;
-            }).join('');
+
+                const list = window.UNOFFICIAL_NOTES || [];
+                const f = list.filter(n => {
+                    const yr = String(n.year || '1');
+                    const sm = String(n.semester || n.sem || 'odd').toLowerCase();
+                    const sub = String(n.subject_name || n.subjectName || n.title || '').toUpperCase();
+                    const cr = String(n.creator_name || n.creatorName || '');
+
+                    const matchYr = !window.FILTERS.year || yr === String(window.FILTERS.year);
+                    const matchSm = !window.FILTERS.sem || sm === String(window.FILTERS.sem).toLowerCase();
+                    const matchQ = !q || sub.includes(q) || cr.toUpperCase().includes(q);
+                    const matchCr = !creator || cr.toLowerCase() === creator.toLowerCase();
+
+                    return matchYr && matchSm && matchQ && matchCr;
+                });
+
+                if (!f.length) {
+                    let msg = `No unofficial notes found for Year ${window.FILTERS.year} · ${String(window.FILTERS.sem || '').toUpperCase()}`;
+                    if (creator) msg += ` by "${creator}"`;
+                    g.innerHTML = `
+                        <div class="no-data" style="text-align:center;padding:40px 16px;width:100%;">
+                            <i class="fas fa-file-alt" style="font-size:2.5rem;color:var(--muted);margin-bottom:12px;display:block;"></i>
+                            <div style="font-size:1rem;font-weight:600;color:var(--text);">${msg}</div>
+                            ${creator ? `<button class="ap-btn warm" onclick="window.clearCreatorFilter()" style="margin-top:14px;padding:6px 14px;font-size:0.75rem;"><i class="fas fa-undo"></i> Show All Creators</button>` : ''}
+                        </div>
+                    `;
+                    return;
+                }
+
+                g.innerHTML = f.map(n => {
+                    const subject = n.subject_name || n.subjectName || n.title || 'Untitled Note';
+                    const creatorName = n.creator_name || n.creatorName || 'Anonymous';
+                    const driveLink = n.drive_link || n.driveLink || n.link || '#';
+                    const igLink = n.instagram_link || n.instagramLink || (n.instagram_username || n.instagramUsername ? `https://instagram.com/${(n.instagram_username || n.instagramUsername).replace('@','')}` : '');
+                    const igHandle = n.instagram_username || n.instagramUsername || '';
+                    const upiQr = n.upi_qr_image_link || n.upiQrImageLink || '';
+                    const yr = n.year || '1';
+                    const sm = (n.semester || n.sem || 'odd').toUpperCase();
+
+                    let igHtml = '';
+                    if (igLink) {
+                        igHtml = `<a href="${window.htmlEsc(igLink)}" target="_blank" rel="noopener noreferrer" class="unofficial-ig-btn" title="View ${window.htmlEsc(igHandle || creatorName)}'s Instagram" style="color:#E1306C;font-size:1.15rem;display:inline-flex;align-items:center;padding:4px;transition:transform .2s;"><i class="fab fa-instagram"></i></a>`;
+                    }
+
+                    let coffeeHtml = '';
+                    if (upiQr) {
+                        coffeeHtml = `<button type="button" class="unofficial-coffee-btn" onclick="window.openCoffeeModal('${window.htmlEsc(creatorName)}', '${window.htmlEsc(upiQr)}')" title="Buy a coffee to ${window.htmlEsc(creatorName)}" style="background:none;border:none;color:var(--acid);font-size:1.15rem;cursor:pointer;padding:4px;display:inline-flex;align-items:center;transition:transform .2s;"><i class="fas fa-coffee"></i></button>`;
+                    }
+
+                    return `
+                        <div class="note-card vis unofficial-note-card" id="unNote-${n.id}">
+                            <div class="card-meta">
+                                <span class="card-dept-note" style="background:rgba(218,255,1,0.12);color:var(--acid);font-weight:700;">UNOFFICIAL</span>
+                                <span>Yr ${yr} · ${sm}</span>
+                            </div>
+                            <div class="card-title" style="margin-top:8px;">${window.htmlEsc(subject)}</div>
+                            
+                            <div class="unofficial-creator-box" style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 16px 0;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;">
+                                <button type="button" onclick="window.filterByCreator('${window.htmlEsc(creatorName)}')" title="View all notes by ${window.htmlEsc(creatorName)}" style="background:none;border:none;color:var(--text);font-size:0.8rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0;text-align:left;">
+                                    <i class="fas fa-user-circle" style="color:var(--acid);font-size:0.95rem;"></i>
+                                    <span style="border-bottom:1px dashed var(--muted);">${window.htmlEsc(creatorName)}</span>
+                                </button>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    ${igHtml}
+                                    ${coffeeHtml}
+                                </div>
+                            </div>
+
+                            <button class="dl-btn dl-btn-acid" type="button" onclick="if(window.checkAuthClick()){window.open('${window.htmlEsc(driveLink)}', '_blank');}">
+                                <i class="fas fa-eye"></i> View PDF
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
         };
         window.toggleAcademicMode = () => {
             window.currentAcademicMode = window.currentAcademicMode === 'notes' ? 'answers' : 'notes';
@@ -22169,6 +22265,36 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         </div>
     </div>
 
+    <!-- BUY ME A COFFEE POPUP / MODAL -->
+    <div class="modal-overlay" id="coffeeModal" style="display:none;align-items:center;justify-content:center;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:999999;padding:16px;" role="dialog" aria-modal="true" aria-labelledby="coffeeModalTitle" onclick="if(event.target===this) window.closeCoffeeModal();">
+        <div class="modal-card" style="max-width:400px;width:100%;background:var(--ink2,#12111a);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:18px;padding:24px;position:relative;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.85);animation:coffeePop .25s ease;">
+            <button type="button" class="modal-close-btn" onclick="window.closeCoffeeModal()" aria-label="Close" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted,#888);font-size:1.25rem;cursor:pointer;padding:6px;transition:color .2s;"><i class="fas fa-times"></i></button>
+            
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:rgba(218,255,1,0.12);border:1px solid rgba(218,255,1,0.3);margin-bottom:14px;">
+                <i class="fas fa-coffee" style="font-size:1.6rem;color:var(--acid,#daff01);"></i>
+            </div>
+
+            <h3 id="coffeeModalTitle" style="font-family:'Unbounded',sans-serif;font-size:1.05rem;font-weight:700;margin:0 0 16px 0;line-height:1.4;text-transform:uppercase;color:var(--text,#fff);">
+                BUY A COFFEE TO <span id="coffeeCreatorName" style="color:var(--acid,#daff01);">CREATOR</span> ☕
+            </h3>
+
+            <div style="background:#ffffff;padding:12px;border-radius:14px;display:inline-block;margin:0 auto 16px auto;box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:240px;width:100%;">
+                <img id="coffeeQrImg" src="" alt="Creator UPI QR Code" style="width:100%;height:auto;display:block;border-radius:8px;min-height:200px;object-fit:contain;" onerror="this.src='https://via.placeholder.com/220x220?text=QR+Code+Unavailable'">
+            </div>
+
+            <p style="font-size:0.86rem;line-height:1.55;color:rgba(255,255,255,0.85);margin:0 0 16px 0;">
+                If these notes helped you, you can support the creator by buying them a coffee. Your support and appreciation mean a lot! ❤️
+            </p>
+
+            <div style="font-size:0.72rem;color:var(--muted,#777);margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:6px;">
+                <i class="fas fa-shield-alt" style="color:var(--acid,#daff01);"></i>
+                <span>Scan using Google Pay, PhonePe, Paytm or any UPI App</span>
+            </div>
+
+            <button type="button" class="ap-btn red" onclick="window.closeCoffeeModal()" style="width:100%;padding:11px;justify-content:center;border-radius:8px;font-weight:700;">Close</button>
+        </div>
+    </div>
+
     <section id="page-academic" class="page">
         <div class="page-banner">
             <div class="page-banner-kicker">
@@ -22183,6 +22309,12 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     style="cursor:pointer;user-select:none;transition:all .3s ease;"
                     onclick="window.toggleAcademicMode?.()">Notes</span> <span class="hi">Database</span></h2>
             <div class="filter-card">
+                <!-- OFFICIAL / UNOFFICIAL Filter Selection (Above Year) -->
+                <div class="filter-row notes-type-row" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08);gap:10px;">
+                    <span class="filter-key">Type</span>
+                    <button class="tog-pill on notes-type-pill" id="btnNotesOfficial" type="button" onclick="window.setNotesCategory('official', this)">OFFICIAL</button>
+                    <button class="tog-pill notes-type-pill" id="btnNotesUnofficial" type="button" onclick="window.setNotesCategory('unofficial', this)">UNOFFICIAL</button>
+                </div>
                 <div class="search-wrap"><input type="text" id="noteSearch" class="search-input"
                         placeholder="Search subject or dept..."><i class="fas fa-search search-icon"></i></div>
                 <div class="filter-row"><span class="filter-key">Year</span><button class="tog-pill on"
@@ -22193,6 +22325,15 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 <div class="filter-row"><span class="filter-key">Sem</span><button class="tog-pill on"
                         onclick="setF('sem','odd',this)">Odd</button><button class="tog-pill"
                         onclick="setF('sem','even',this)">Even</button></div>
+            </div>
+            <div id="unofficialCreatorBanner" style="display:none;margin-bottom:16px;background:rgba(218,255,1,0.08);border:1px solid rgba(218,255,1,0.3);border-radius:10px;padding:10px 16px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                <div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;">
+                    <i class="fas fa-user-edit" style="color:var(--acid);"></i>
+                    <span>Viewing notes by creator: <strong id="activeCreatorName" style="color:var(--acid);"></strong></span>
+                </div>
+                <button class="ap-btn red" type="button" onclick="window.clearCreatorFilter()" style="padding:4px 12px;font-size:0.75rem;">
+                    <i class="fas fa-times"></i> Clear Filter
+                </button>
             </div>
             <div class="cards-grid" id="notesGrid"></div>
         </div>
@@ -23070,6 +23211,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                         <div class="ap-nav-item" onclick="apNav('doubts')"><i class="fas fa-question-circle"></i> Doubts
                         </div>
                         <div class="ap-nav-item" onclick="apNav('academic')"><i class="fas fa-book"></i> Notes DB</div>
+                        <div class="ap-nav-item" onclick="apNav('unofficial_notes')"><i class="fas fa-file-alt" style="color:var(--acid);"></i> Unofficial Notes</div>
                         <div class="ap-nav-item" onclick="apNav('answers')"><i class="fas fa-book"></i> Answer DB</div>
                         <div class="ap-nav-item" onclick="apNav('pyq')"><i class="fas fa-file-alt"></i> PYQ DB</div>
                         <div class="ap-nav-item" onclick="apNav('organizer')"><i class="fas fa-clipboard-list"></i>
@@ -23111,6 +23253,131 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                     </div>
                 </div>
                 <div class="ap-main">
+                    <!-- UNOFFICIAL NOTES ADMIN MANAGEMENT SECTION -->
+                    <div class="ap-sec" id="ap-unofficial-notes">
+                        <div class="ap-hdr">
+                            <h2><i class="fas fa-file-alt" style="color:var(--acid);margin-right:10px;"></i>UNOFFICIAL NOTES</h2>
+                            <p>Community & student-created notes database: manage subjects, drive links, contributors, Instagram profiles and Buy Me a Coffee UPI QR codes.</p>
+                        </div>
+
+                        <!-- Add / Edit Form Card -->
+                        <div class="ap-card" style="margin-top:20px;">
+                            <h3 id="unNoteFormTitle" style="display:flex;align-items:center;gap:8px;font-size:1.05rem;margin-bottom:16px;">
+                                <i class="fas fa-plus-circle" style="color:var(--acid);"></i> Add Unofficial Note
+                            </h3>
+                            <input type="hidden" id="unNoteEditId">
+                            
+                            <div style="display:flex;flex-direction:column;gap:16px;">
+                                <!-- Row 1: Year & Semester -->
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;">
+                                    <div>
+                                        <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                            Select Year *
+                                        </label>
+                                        <select class="ap-input" id="unNoteYear" required style="width:100%;">
+                                            <option value="1">1st Year</option>
+                                            <option value="2">2nd Year</option>
+                                            <option value="3">3rd Year</option>
+                                            <option value="4">4th Year</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                            Select Semester *
+                                        </label>
+                                        <select class="ap-input" id="unNoteSem" required style="width:100%;">
+                                            <option value="odd">Odd Semester</option>
+                                            <option value="even">Even Semester</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Row 2: Subject Name -->
+                                <div>
+                                    <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                        Subject Name *
+                                    </label>
+                                    <input type="text" class="ap-input" id="unNoteSubject" placeholder="e.g. Engineering Mathematics III, Operating Systems, etc." required style="width:100%;">
+                                </div>
+
+                                <!-- Row 3: Google Drive Link -->
+                                <div>
+                                    <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                        Google Drive Link *
+                                    </label>
+                                    <input type="url" class="ap-input" id="unNoteLink" placeholder="https://drive.google.com/file/d/.../view" required style="width:100%;">
+                                </div>
+
+                                <!-- Row 4: Creator Name & Instagram Username -->
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;">
+                                    <div>
+                                        <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                            Creator Name *
+                                        </label>
+                                        <input type="text" class="ap-input" id="unNoteCreator" placeholder="e.g. Aditya Sharma" required style="width:100%;">
+                                    </div>
+                                    <div>
+                                        <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                            Instagram Username <span style="color:var(--muted);font-weight:400;text-transform:none;">(Optional)</span>
+                                        </label>
+                                        <input type="text" class="ap-input" id="unNoteIgUser" placeholder="@creatorname" style="width:100%;">
+                                    </div>
+                                </div>
+
+                                <!-- Row 5: Instagram Profile Link & UPI QR Image Link -->
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;">
+                                    <div>
+                                        <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                            Instagram Profile Link <span style="color:var(--muted);font-weight:400;text-transform:none;">(Optional URL)</span>
+                                        </label>
+                                        <input type="url" class="ap-input" id="unNoteIgLink" placeholder="https://instagram.com/creatorname" style="width:100%;">
+                                    </div>
+                                    <div>
+                                        <label style="display:block;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;color:var(--text);">
+                                            UPI QR Image Link <span style="color:var(--muted);font-weight:400;text-transform:none;">(Optional for Buy Me a Coffee)</span>
+                                        </label>
+                                        <input type="url" class="ap-input" id="unNoteUpiQr" placeholder="https://example.com/upi-qr.png" oninput="window.previewUnNoteQr(this.value)" style="width:100%;">
+                                        <div id="unNoteQrPreviewBox" style="display:none;margin-top:10px;border-radius:8px;overflow:hidden;border:1px solid var(--border);max-height:120px;max-width:120px;position:relative;background:#fff;padding:6px;">
+                                            <img id="unNoteQrPreview" src="" alt="QR Preview" style="width:100%;height:100%;object-fit:contain;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;padding-top:10px;border-top:1px solid var(--border);">
+                                    <button class="ap-btn red" type="button" onclick="window.resetUnofficialNoteForm()" id="unNoteCancelBtn" style="display:none;">Cancel</button>
+                                    <button class="ap-btn warm" type="button" onclick="window.saveUnofficialNote()" id="unNoteSubmitBtn">
+                                        <i class="fas fa-plus-circle"></i> Add Unofficial Note
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Management List / Table Card -->
+                        <div class="ap-card" style="margin-top:20px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                                <h3 style="font-size:1.1rem;margin:0;"><i class="fas fa-list-ul" style="color:var(--cyan);margin-right:8px;"></i>All Unofficial Notes (<span id="apUnNotesCount">0</span>)</h3>
+                                <button class="ap-btn cyan" type="button" onclick="window.renderApUnofficialNotes()" style="padding:6px 14px;font-size:0.75rem;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            </div>
+                            <div class="ap-table-wrap">
+                                <table class="ap-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject Name</th>
+                                            <th>Year / Sem</th>
+                                            <th>Creator</th>
+                                            <th>Links & Coffee</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="apUnofficialNotesTable">
+                                        <!-- Dynamically rendered here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- JOBTOK ADMIN MANAGEMENT SECTION -->
                     <div class="ap-sec" id="ap-jobtok">
                         <div class="ap-hdr">
@@ -24785,6 +25052,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 await _origLoadAll?.();
                 try {
                     if (window.loadJobTokPosts) window.loadJobTokPosts();
+                    if (window.loadUnofficialNotes) window.loadUnofficialNotes();
                     window.CA3_PAPERS = await window.fsLoadCol('ca3_papers');
                     if (document.getElementById('page-ca3')?.classList.contains('active')) {
                         window.renderCA3Papers();
@@ -24823,6 +25091,8 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                     window.renderApCA3();
                 } else if (sec === 'jobtok' || sec === 'shorts') {
                     if (window.renderApJobTok) window.renderApJobTok();
+                } else if (sec === 'unofficial_notes') {
+                    if (window.renderApUnofficialNotes) window.renderApUnofficialNotes();
                 }
             };
 
@@ -27854,6 +28124,13 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                                     return;
                                 }
 
+                                const coffeeModal = document.getElementById('coffeeModal');
+                                if (coffeeModal && (coffeeModal.style.display === 'flex' || coffeeModal.style.display === 'block')) {
+                                    if (window.closeCoffeeModal) { window.closeCoffeeModal(); return; }
+                                    coffeeModal.style.display = 'none';
+                                    return;
+                                }
+
                                 const redeemModal = document.getElementById('redeemModal');
                                 if (redeemModal && (redeemModal.style.display === 'flex' || redeemModal.style.display === 'block')) {
                                     if (window.closeRedeemModal) { window.closeRedeemModal(); return; }
@@ -28830,6 +29107,356 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                     const postId = match ? match[1] : null;
                     setTimeout(() => window.openJobTok(postId), 300);
                 }
+            }
+        })();
+        </script>
+
+        <!-- UNOFFICIAL NOTES CLIENT SYSTEM -->
+        <script id="unofficialNotesScript">
+        (function() {
+            window.UNOFFICIAL_NOTES = [];
+            window.currentNotesCategory = 'official';
+            window.activeCreatorFilter = null;
+
+            window.setNotesCategory = function(cat, btn) {
+                window.currentNotesCategory = cat;
+                document.querySelectorAll('.notes-type-pill').forEach(b => b.classList.remove('on'));
+                if (btn) {
+                    btn.classList.add('on');
+                } else {
+                    document.getElementById('btnNotesOfficial')?.classList.toggle('on', cat === 'official');
+                    document.getElementById('btnNotesUnofficial')?.classList.toggle('on', cat === 'unofficial');
+                }
+                if (cat === 'official') {
+                    window.activeCreatorFilter = null;
+                }
+                window.renderAcademic();
+            };
+
+            window.filterByCreator = function(creatorName) {
+                window.currentNotesCategory = 'unofficial';
+                window.activeCreatorFilter = creatorName;
+                document.querySelectorAll('.notes-type-pill').forEach(b => b.classList.remove('on'));
+                document.getElementById('btnNotesUnofficial')?.classList.add('on');
+                window.renderAcademic();
+                const filterCard = document.querySelector('#page-academic .filter-card');
+                if (filterCard) filterCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+
+            window.clearCreatorFilter = function() {
+                window.activeCreatorFilter = null;
+                window.renderAcademic();
+            };
+
+            window.openCoffeeModal = function(creatorName, upiQrUrl) {
+                const modal = document.getElementById('coffeeModal');
+                if (!modal) return;
+                const nameSpan = document.getElementById('coffeeCreatorName');
+                if (nameSpan) nameSpan.textContent = creatorName || 'CREATOR';
+                const qrImg = document.getElementById('coffeeQrImg');
+                if (qrImg) {
+                    qrImg.src = upiQrUrl || '';
+                }
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            };
+
+            window.closeCoffeeModal = function() {
+                const modal = document.getElementById('coffeeModal');
+                if (!modal) return;
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            };
+
+            window.previewUnNoteQr = function(url) {
+                const box = document.getElementById('unNoteQrPreviewBox');
+                const img = document.getElementById('unNoteQrPreview');
+                if (!box || !img) return;
+                if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:'))) {
+                    img.src = url;
+                    box.style.display = 'block';
+                } else {
+                    box.style.display = 'none';
+                }
+            };
+
+            window.resetUnofficialNoteForm = function() {
+                const editId = document.getElementById('unNoteEditId');
+                if (editId) editId.value = '';
+                const yr = document.getElementById('unNoteYear');
+                if (yr) yr.value = '1';
+                const sem = document.getElementById('unNoteSem');
+                if (sem) sem.value = 'odd';
+                const sub = document.getElementById('unNoteSubject');
+                if (sub) sub.value = '';
+                const link = document.getElementById('unNoteLink');
+                if (link) link.value = '';
+                const cr = document.getElementById('unNoteCreator');
+                if (cr) cr.value = '';
+                const igUser = document.getElementById('unNoteIgUser');
+                if (igUser) igUser.value = '';
+                const igLink = document.getElementById('unNoteIgLink');
+                if (igLink) igLink.value = '';
+                const upiQr = document.getElementById('unNoteUpiQr');
+                if (upiQr) upiQr.value = '';
+                const box = document.getElementById('unNoteQrPreviewBox');
+                if (box) box.style.display = 'none';
+                const cancelBtn = document.getElementById('unNoteCancelBtn');
+                if (cancelBtn) cancelBtn.style.display = 'none';
+                const submitBtn = document.getElementById('unNoteSubmitBtn');
+                if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Unofficial Note';
+                const formTitle = document.getElementById('unNoteFormTitle');
+                if (formTitle) formTitle.innerHTML = '<i class="fas fa-plus-circle" style="color:var(--acid);"></i> Add Unofficial Note';
+            };
+
+            window.editUnofficialNote = function(id) {
+                const note = (window.UNOFFICIAL_NOTES || []).find(n => n.id === id);
+                if (!note) return;
+                const editId = document.getElementById('unNoteEditId');
+                if (editId) editId.value = note.id;
+                const yr = document.getElementById('unNoteYear');
+                if (yr) yr.value = note.year || '1';
+                const sem = document.getElementById('unNoteSem');
+                if (sem) sem.value = (note.semester || note.sem || 'odd').toLowerCase();
+                const sub = document.getElementById('unNoteSubject');
+                if (sub) sub.value = note.subject_name || note.subjectName || '';
+                const link = document.getElementById('unNoteLink');
+                if (link) link.value = note.drive_link || note.driveLink || '';
+                const cr = document.getElementById('unNoteCreator');
+                if (cr) cr.value = note.creator_name || note.creatorName || '';
+                const igUser = document.getElementById('unNoteIgUser');
+                if (igUser) igUser.value = note.instagram_username || note.instagramUsername || '';
+                const igLink = document.getElementById('unNoteIgLink');
+                if (igLink) igLink.value = note.instagram_link || note.instagramLink || '';
+                const upiQr = document.getElementById('unNoteUpiQr');
+                if (upiQr) upiQr.value = note.upi_qr_image_link || note.upiQrImageLink || '';
+                window.previewUnNoteQr(note.upi_qr_image_link || note.upiQrImageLink);
+
+                const cancelBtn = document.getElementById('unNoteCancelBtn');
+                if (cancelBtn) cancelBtn.style.display = 'inline-block';
+                const submitBtn = document.getElementById('unNoteSubmitBtn');
+                if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                const formTitle = document.getElementById('unNoteFormTitle');
+                if (formTitle) formTitle.innerHTML = '<i class="fas fa-edit" style="color:var(--cyan);"></i> Edit Unofficial Note';
+                document.getElementById('ap-unofficial-notes')?.scrollIntoView({ behavior: 'smooth' });
+            };
+
+            window.loadUnofficialNotes = async function() {
+                try {
+                    if (!window.supabase) return;
+                    let data = null;
+                    try {
+                        const res = await window.supabase.from('unofficial_notes').select('*').order('created_at', { ascending: false });
+                        if (!res.error && Array.isArray(res.data) && res.data.length > 0) {
+                            data = res.data;
+                        }
+                    } catch(e) {}
+
+                    if (!data || !data.length) {
+                        const fallback = await window.supabase.from('settings').select('*').eq('type', 'unofficial_notes').order('id', { ascending: false });
+                        if (!fallback.error && Array.isArray(fallback.data)) {
+                            data = fallback.data.map(row => {
+                                let parsed = {};
+                                try { parsed = typeof row.body === 'string' ? JSON.parse(row.body) : (row.body || {}); } catch(e){}
+                                return {
+                                    id: row.id,
+                                    category: 'unofficial',
+                                    year: String(parsed.year || row.mode || '1'),
+                                    semester: String(parsed.semester || parsed.sem || 'odd').toLowerCase(),
+                                    subject_name: parsed.subject_name || parsed.subjectName || row.title || '',
+                                    drive_link: parsed.drive_link || parsed.driveLink || row.link || '',
+                                    creator_name: parsed.creator_name || parsed.creatorName || '',
+                                    instagram_username: parsed.instagram_username || parsed.instagramUsername || '',
+                                    instagram_link: parsed.instagram_link || parsed.instagramLink || '',
+                                    upi_qr_image_link: parsed.upi_qr_image_link || parsed.upiQrImageLink || row.img || '',
+                                    created_at: parsed.created_at || row.created_at || Date.now(),
+                                    updated_at: parsed.updated_at || Date.now()
+                                };
+                            });
+                        }
+                    }
+
+                    if (Array.isArray(data)) {
+                        window.UNOFFICIAL_NOTES = data.map(item => ({
+                            id: item.id,
+                            category: 'unofficial',
+                            year: String(item.year || item.year_level || '1'),
+                            semester: String(item.semester || item.sem || 'odd').toLowerCase(),
+                            subject_name: item.subject_name || item.subjectName || item.title || '',
+                            drive_link: item.drive_link || item.driveLink || item.link || '',
+                            creator_name: item.creator_name || item.creatorName || 'Anonymous',
+                            instagram_username: item.instagram_username || item.instagramUsername || '',
+                            instagram_link: item.instagram_link || item.instagramLink || '',
+                            upi_qr_image_link: item.upi_qr_image_link || item.upiQrImageLink || item.img || '',
+                            created_at: item.created_at || Date.now(),
+                            updated_at: item.updated_at || Date.now()
+                        }));
+                        if (document.getElementById('page-academic')?.classList.contains('active')) {
+                            window.renderAcademic();
+                        }
+                        if (document.getElementById('ap-unofficial-notes')?.classList.contains('active')) {
+                            window.renderApUnofficialNotes();
+                        }
+                    }
+                } catch(e) {
+                    console.warn('[Unofficial Notes] load error:', e);
+                }
+            };
+
+            window.saveUnofficialNote = async function() {
+                const editId = (document.getElementById('unNoteEditId')?.value || '').trim();
+                const year = (document.getElementById('unNoteYear')?.value || '1').trim();
+                const sem = (document.getElementById('unNoteSem')?.value || 'odd').trim().toLowerCase();
+                const subjectName = (document.getElementById('unNoteSubject')?.value || '').trim();
+                const driveLink = (document.getElementById('unNoteLink')?.value || '').trim();
+                const creatorName = (document.getElementById('unNoteCreator')?.value || '').trim();
+                const igUser = (document.getElementById('unNoteIgUser')?.value || '').trim();
+                const igLink = (document.getElementById('unNoteIgLink')?.value || '').trim();
+                const upiQr = (document.getElementById('unNoteUpiQr')?.value || '').trim();
+
+                if (!subjectName || !driveLink || !creatorName) {
+                    if (window.showToast) window.showToast('Subject name, Google Drive link, and Creator name are required.', 'err');
+                    else alert('Subject name, Google Drive link, and Creator name are required.');
+                    return;
+                }
+
+                const submitBtn = document.getElementById('unNoteSubmitBtn');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                }
+
+                const payload = {
+                    category: 'unofficial',
+                    year: year,
+                    semester: sem,
+                    subject_name: subjectName,
+                    drive_link: driveLink,
+                    creator_name: creatorName,
+                    instagram_username: igUser,
+                    instagram_link: igLink,
+                    upi_qr_image_link: upiQr,
+                    updated_at: new Date().toISOString()
+                };
+
+                try {
+                    if (editId) {
+                        try {
+                            await window.supabase.from('unofficial_notes').update(payload).eq('id', editId);
+                        } catch(e){}
+
+                        await window.supabase.from('settings').update({
+                            title: subjectName,
+                            link: driveLink,
+                            img: upiQr || null,
+                            mode: year,
+                            body: JSON.stringify({ ...payload, id: editId })
+                        }).eq('id', editId);
+
+                        if (window.showToast) window.showToast('✅ Unofficial Note updated!', 'success');
+                    } else {
+                        const newId = 'unnote_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+                        payload.id = newId;
+                        payload.created_at = new Date().toISOString();
+
+                        try {
+                            await window.supabase.from('unofficial_notes').insert([payload]);
+                        } catch(e){}
+
+                        await window.supabase.from('settings').insert([{
+                            id: newId,
+                            type: 'unofficial_notes',
+                            title: subjectName,
+                            link: driveLink,
+                            img: upiQr || null,
+                            mode: year,
+                            active: true,
+                            body: JSON.stringify(payload)
+                        }]);
+
+                        if (window.showToast) window.showToast('✅ Unofficial Note published!', 'success');
+                    }
+
+                    window.resetUnofficialNoteForm();
+                    await window.loadUnofficialNotes();
+                    window.renderApUnofficialNotes();
+                    if (document.getElementById('page-academic')?.classList.contains('active')) {
+                        window.renderAcademic();
+                    }
+                } catch(e) {
+                    console.error('[Unofficial Notes] save error:', e);
+                    if (window.showToast) window.showToast('Save failed: ' + e.message, 'err');
+                } finally {
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            };
+
+            window.deleteUnofficialNote = async function(id) {
+                if (!confirm('Are you sure you want to permanently delete this unofficial note?')) return;
+                try {
+                    try { await window.supabase.from('unofficial_notes').delete().eq('id', id); } catch(e){}
+                    await window.supabase.from('settings').delete().eq('id', id);
+                    if (window.showToast) window.showToast('🗑️ Note deleted', 'info');
+                    window.UNOFFICIAL_NOTES = (window.UNOFFICIAL_NOTES || []).filter(n => n.id !== id);
+                    window.renderApUnofficialNotes();
+                    window.renderAcademic();
+                } catch(e) {
+                    console.error('[Unofficial Notes] delete error:', e);
+                    if (window.showToast) window.showToast('Delete failed: ' + e.message, 'err');
+                }
+            };
+
+            window.renderApUnofficialNotes = function() {
+                const countEl = document.getElementById('apUnNotesCount');
+                const tbody = document.getElementById('apUnofficialNotesTable');
+                if (!tbody) return;
+                const list = window.UNOFFICIAL_NOTES || [];
+                if (countEl) countEl.textContent = list.length;
+                if (!list.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:24px;">No unofficial notes added yet. Use the form above to add your first note!</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.map(n => {
+                    const subject = n.subject_name || n.subjectName || n.title || 'Untitled';
+                    const yr = n.year || '1';
+                    const sm = (n.semester || n.sem || 'odd').toUpperCase();
+                    const creator = n.creator_name || n.creatorName || 'Anonymous';
+                    const drive = n.drive_link || n.driveLink || n.link || '#';
+                    const ig = n.instagram_link || n.instagramLink || '';
+                    const qr = n.upi_qr_image_link || n.upiQrImageLink || '';
+
+                    return `
+                        <tr>
+                            <td style="font-weight:600;color:var(--text);">${window.htmlEsc(subject)}</td>
+                            <td><span class="tag warm">Yr ${yr} · ${sm}</span></td>
+                            <td><i class="fas fa-user-circle" style="color:var(--acid);margin-right:4px;"></i>${window.htmlEsc(creator)}</td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <a href="${window.htmlEsc(drive)}" target="_blank" class="ap-btn cyan" style="padding:3px 8px;font-size:0.65rem;" title="Open Drive"><i class="fas fa-external-link-alt"></i> Drive</a>
+                                    ${ig ? `<a href="${window.htmlEsc(ig)}" target="_blank" style="color:#E1306C;font-size:1rem;" title="Instagram"><i class="fab fa-instagram"></i></a>` : ''}
+                                    ${qr ? `<span style="color:var(--acid);font-size:0.9rem;" title="Buy Me a Coffee Enabled"><i class="fas fa-coffee"></i></span>` : ''}
+                                </div>
+                            </td>
+                            <td>
+                                <button class="ap-btn warm" style="padding:4px 8px;font-size:0.65rem;" onclick="window.editUnofficialNote('${n.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="ap-btn red" style="padding:4px 8px;font-size:0.65rem;" onclick="window.deleteUnofficialNote('${n.id}')" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            };
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const cm = document.getElementById('coffeeModal');
+                    if (cm && cm.style.display !== 'none') window.closeCoffeeModal();
+                }
+            });
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => window.loadUnofficialNotes());
+            } else {
+                window.loadUnofficialNotes();
             }
         })();
         </script>
