@@ -11362,6 +11362,13 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
             border-radius: 0 4px 4px 0;
         }
 
+        /* Remove green accent vertical line for unofficial notes */
+        .note-card.unofficial-note-card::before,
+        .unofficial-note-card::before {
+            display: none !important;
+            content: none !important;
+        }
+
         .note-card:hover {
             border-color: rgba(200, 255, 0, 0.3);
             background: rgba(255, 255, 255, 0.06);
