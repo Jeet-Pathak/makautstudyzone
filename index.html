@@ -4465,6 +4465,35 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
             g.innerHTML = f.map(b => `<div class="lib-card" id="${window.materialDomId('library', b.id)}">${window.shareButtons('library', b.id)}<img loading="lazy" src="${b.cover || 'https://via.placeholder.com/300x400/08060e/200255?text=No+Cover'}" class="lib-cover" alt="${b.title}" onclick="window.openLibPDF('${b.pdf || '#'}')"><div class="lib-info"><div class="lib-title">${b.title}</div><div class="lib-meta"><span>${b.stream || 'ALL'}</span><span>Yr ${b.year} · ${b.sem?.toUpperCase()}</span></div><div class="lib-open" onclick="window.openLibPDF('${b.pdf || '#'}')"><i class="fas fa-book-open"></i> Open PDF</div></div></div>`).join('');
         };
         window.openLibPDF = (url) => { if (!window.checkAuthClick()) return; if (url && url !== '#') window.open(url, '_blank'); };
+        window.openCoffeeModal = (cr, qr) => {
+            const m = document.getElementById('coffeeModal');
+            if (!m) return;
+            const n = document.getElementById('coffeeCreatorName'); if (n) n.textContent = cr || 'CREATOR';
+            const q = document.getElementById('coffeeQrImg'); if (q) q.src = qr || '';
+            m.classList.add('active');
+            m.style.setProperty('display', 'flex', 'important');
+            m.style.setProperty('opacity', '1', 'important');
+            m.style.setProperty('pointer-events', 'all', 'important');
+            document.body.style.overflow = 'hidden';
+        };
+        window.closeCoffeeModal = () => {
+            const m = document.getElementById('coffeeModal');
+            if (!m) return;
+            m.classList.remove('active');
+            m.style.setProperty('display', 'none', 'important');
+            m.style.setProperty('opacity', '0', 'important');
+            m.style.setProperty('pointer-events', 'none', 'important');
+            document.body.style.overflow = '';
+        };
+        window.openCoffeeForNote = (id) => {
+            const found = (window.UNOFFICIAL_NOTES || []).find(x => String(x.id) === String(id));
+            if (found) {
+                window.openCoffeeModal(found.creator_name || found.creatorName || 'Creator', found.upi_qr_image_link || found.upiQrImageLink || '');
+            } else {
+                const card = document.getElementById('unNote-' + id);
+                if (card) window.openCoffeeModal(card.getAttribute('data-creator'), card.getAttribute('data-qr'));
+            }
+        };
         window.renderAcademic = () => {
             const g = document.getElementById('notesGrid'); if (!g) return;
             const cat = window.currentNotesCategory || 'official';
@@ -4548,11 +4577,11 @@ ${u.role === 'admin' ? `<button class="ap-users-btn ban" onclick="window.adminTo
 
                     let coffeeHtml = '';
                     if (upiQr) {
-                        coffeeHtml = `<button type="button" class="unofficial-coffee-btn" onclick="window.openCoffeeModal('${window.htmlEsc(creatorName)}', '${window.htmlEsc(upiQr)}')" title="Buy a coffee to ${window.htmlEsc(creatorName)}" style="background:none;border:none;color:var(--acid);font-size:1.15rem;cursor:pointer;padding:4px;display:inline-flex;align-items:center;transition:transform .2s;"><i class="fas fa-coffee"></i></button>`;
+                        coffeeHtml = `<button type="button" class="unofficial-coffee-btn" onclick="event.stopPropagation(); window.openCoffeeForNote('${n.id}')" title="Buy a coffee to ${window.htmlEsc(creatorName)}" style="background:none;border:none;color:var(--acid);font-size:1.25rem;cursor:pointer;padding:6px;display:inline-flex;align-items:center;justify-content:center;transition:transform .2s;touch-action:manipulation;"><i class="fas fa-coffee"></i></button>`;
                     }
 
                     return `
-                        <div class="note-card vis unofficial-note-card" id="unNote-${n.id}">
+                        <div class="note-card vis unofficial-note-card" id="unNote-${n.id}" data-creator="${window.htmlEsc(creatorName)}" data-qr="${window.htmlEsc(upiQr)}">
                             <div class="card-meta">
                                 <span class="card-dept-note" style="background:rgba(218,255,1,0.12);color:var(--acid);font-weight:700;">UNOFFICIAL</span>
                                 <span>Yr ${yr} · ${sm}</span>
@@ -11367,6 +11396,38 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
         .unofficial-note-card::before {
             display: none !important;
             content: none !important;
+        }
+
+        /* Buy Me a Coffee Modal */
+        #coffeeModal.modal-overlay {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 999999 !important;
+            background: rgba(0, 0, 0, 0.85) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            display: none;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 16px !important;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        #coffeeModal.modal-overlay.active {
+            display: flex !important;
+            opacity: 1 !important;
+            pointer-events: all !important;
+        }
+
+        @keyframes coffeePop {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        #coffeeModal.active .modal-card {
+            animation: coffeePop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .note-card:hover {
@@ -29176,24 +29237,55 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 window.renderAcademic();
             };
 
-            window.openCoffeeModal = function(creatorName, upiQrUrl) {
+            window.openCoffeeModal = function(creatorOrId, upiQrUrl) {
+                let creator = creatorOrId;
+                let qr = upiQrUrl;
+                if (!qr && creatorOrId) {
+                    const found = (window.UNOFFICIAL_NOTES || []).find(x => String(x.id) === String(creatorOrId));
+                    if (found) {
+                        creator = found.creator_name || found.creatorName || 'Creator';
+                        qr = found.upi_qr_image_link || found.upiQrImageLink || '';
+                    }
+                }
                 const modal = document.getElementById('coffeeModal');
                 if (!modal) return;
                 const nameSpan = document.getElementById('coffeeCreatorName');
-                if (nameSpan) nameSpan.textContent = creatorName || 'CREATOR';
+                if (nameSpan) nameSpan.textContent = creator || 'CREATOR';
                 const qrImg = document.getElementById('coffeeQrImg');
                 if (qrImg) {
-                    qrImg.src = upiQrUrl || '';
+                    qrImg.src = qr || '';
                 }
-                modal.style.display = 'flex';
+                modal.classList.add('active');
+                modal.style.setProperty('display', 'flex', 'important');
+                modal.style.setProperty('opacity', '1', 'important');
+                modal.style.setProperty('pointer-events', 'all', 'important');
                 document.body.style.overflow = 'hidden';
             };
 
             window.closeCoffeeModal = function() {
                 const modal = document.getElementById('coffeeModal');
                 if (!modal) return;
-                modal.style.display = 'none';
+                modal.classList.remove('active');
+                modal.style.setProperty('display', 'none', 'important');
+                modal.style.setProperty('opacity', '0', 'important');
+                modal.style.setProperty('pointer-events', 'none', 'important');
                 document.body.style.overflow = '';
+            };
+
+            window.openCoffeeForNote = function(noteId) {
+                const note = (window.UNOFFICIAL_NOTES || []).find(x => String(x.id) === String(noteId));
+                if (note) {
+                    const creator = note.creator_name || note.creatorName || 'Creator';
+                    const qr = note.upi_qr_image_link || note.upiQrImageLink || '';
+                    window.openCoffeeModal(creator, qr);
+                } else {
+                    const card = document.getElementById('unNote-' + noteId);
+                    if (card) {
+                        const creator = card.getAttribute('data-creator') || 'Creator';
+                        const qr = card.getAttribute('data-qr') || '';
+                        window.openCoffeeModal(creator, qr);
+                    }
+                }
             };
 
             window.previewUnNoteQr = function(url) {
