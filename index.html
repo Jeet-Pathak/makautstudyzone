@@ -2837,10 +2837,18 @@
         window.apNav = (sec) => {
             document.querySelectorAll('.ap-nav-item').forEach(i => i.classList.remove('active'));
             document.querySelectorAll('.ap-sec').forEach(s => s.classList.remove('active'));
-            const el = document.getElementById('ap-' + sec);
+            const clean = (sec || '').toLowerCase().trim();
+            const el = document.getElementById('ap-' + clean) 
+                    || document.getElementById('ap-' + clean.replace(/_/g, '-')) 
+                    || document.getElementById('ap-' + clean.replace(/-/g, '_'));
             if (el) el.classList.add('active');
             const navItems = document.querySelectorAll('.ap-nav-item');
-            const target = Array.from(navItems).find(n => n.textContent.toLowerCase().includes(sec));
+            const words = clean.replace(/[-_]/g, ' ');
+            const target = Array.from(navItems).find(n => {
+                const txt = n.textContent.toLowerCase();
+                const oc = (n.getAttribute('onclick') || '').toLowerCase();
+                return txt.includes(clean) || txt.includes(words) || oc.includes(clean);
+            });
             if (target) target.classList.add('active');
             if (sec === 'dashboard') refreshApDash();
             else if (sec === 'academic') renderApNotes();
@@ -2867,7 +2875,14 @@
             else if (sec === 'ca3') window.renderApCA3();
             else if (sec === 'pushnotifications') window.renderApPushNotifications();
             else if (sec === 'jobtok' || sec === 'shorts') window.renderApJobTok();
-            else if (sec === 'unofficial_notes') window.renderApUnofficialNotes();
+            else if (sec === 'unofficial_notes' || sec === 'unofficial-notes' || sec.includes('unofficial')) {
+                if (window.renderApUnofficialNotes) window.renderApUnofficialNotes();
+                if (window.loadUnofficialNotes) {
+                    window.loadUnofficialNotes().then(() => {
+                        if (window.renderApUnofficialNotes) window.renderApUnofficialNotes();
+                    });
+                }
+            }
         };
         window.renderApPushNotifications = async () => {
             const btn = document.getElementById('btnSendPush');
@@ -23254,7 +23269,7 @@ ${p.approved ? `<button class="ap-users-btn ban" onclick="window.updateCA3Approv
                 </div>
                 <div class="ap-main">
                     <!-- UNOFFICIAL NOTES ADMIN MANAGEMENT SECTION -->
-                    <div class="ap-sec" id="ap-unofficial-notes">
+                    <div class="ap-sec" id="ap-unofficial_notes">
                         <div class="ap-hdr">
                             <h2><i class="fas fa-file-alt" style="color:var(--acid);margin-right:10px;"></i>UNOFFICIAL NOTES</h2>
                             <p>Community & student-created notes database: manage subjects, drive links, contributors, Instagram profiles and Buy Me a Coffee UPI QR codes.</p>
@@ -25091,8 +25106,15 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                     window.renderApCA3();
                 } else if (sec === 'jobtok' || sec === 'shorts') {
                     if (window.renderApJobTok) window.renderApJobTok();
-                } else if (sec === 'unofficial_notes') {
+                } else if (sec === 'unofficial_notes' || sec === 'unofficial-notes' || (typeof sec === 'string' && sec.includes('unofficial'))) {
                     if (window.renderApUnofficialNotes) window.renderApUnofficialNotes();
+                    if (!window.UNOFFICIAL_NOTES || !window.UNOFFICIAL_NOTES.length) {
+                        if (window.loadUnofficialNotes) {
+                            window.loadUnofficialNotes().then(() => {
+                                if (window.renderApUnofficialNotes) window.renderApUnofficialNotes();
+                            });
+                        }
+                    }
                 }
             };
 
@@ -29238,7 +29260,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                 if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
                 const formTitle = document.getElementById('unNoteFormTitle');
                 if (formTitle) formTitle.innerHTML = '<i class="fas fa-edit" style="color:var(--cyan);"></i> Edit Unofficial Note';
-                document.getElementById('ap-unofficial-notes')?.scrollIntoView({ behavior: 'smooth' });
+                (document.getElementById('ap-unofficial_notes') || document.getElementById('ap-unofficial-notes'))?.scrollIntoView({ behavior: 'smooth' });
             };
 
             window.loadUnofficialNotes = async function() {
@@ -29294,7 +29316,7 @@ ${f.opts.map(o => `<option value="${o}" ${(item[f.key] || (f.key === 'caType' ? 
                         if (document.getElementById('page-academic')?.classList.contains('active')) {
                             window.renderAcademic();
                         }
-                        if (document.getElementById('ap-unofficial-notes')?.classList.contains('active')) {
+                        if (document.getElementById('ap-unofficial_notes')?.classList.contains('active') || document.getElementById('ap-unofficial-notes')?.classList.contains('active')) {
                             window.renderApUnofficialNotes();
                         }
                     }
